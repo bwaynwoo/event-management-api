@@ -17,8 +17,8 @@ REST API для управления мероприятиями.
 ### 1. Клонировать репозиторий
 
 ```bash
-git clone https://github.com/bwaynwoo/event-management-api.git
-cd event-management-api
+git clone --branch sprint-1 https://github.com/bwaynwoo/event-management-api.git
+cd event-management-api/EventManagementApi
 ```
 
 ### 2. Собрать проект
