@@ -1,4 +1,3 @@
-using EventManagementApi;
 using EventManagementApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
