@@ -23,7 +23,7 @@ public class EventService : IEventService
         Events.Add(eventItem);
     }
 
-    public void ChangeEvent(int id, Event eventItem)
+    public void UpdateEvent(int id, Event eventItem)
     {
         var existingEvent = Events.FirstOrDefault(e => e.Id == id);
         if (existingEvent != null)

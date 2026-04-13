@@ -1,3 +1,4 @@
+using EventManagementApi.Constants;
 using Microsoft.AspNetCore.Mvc;
 using EventManagementApi.DTOs;
 using EventManagementApi.Mappings;
@@ -30,7 +31,7 @@ public class EventsController : ControllerBase
         
         if (eventItem == null)
         {
-            return NotFound(new { message = $"Event with id {id} not found" });
+            return NotFound(new { message = string.Format(ErrorMessages.NotFound, id) });
         }
         
         return Ok(EventMappings.ToResponseDto(eventItem));
@@ -41,7 +42,7 @@ public class EventsController : ControllerBase
     {
         if (request.EndAt <= request.StartAt)
         {
-            return BadRequest(new { message = "EndAt must be later than StartAt" });
+            return BadRequest(new { message = ErrorMessages.EndAtMustBeLater });
         }
         
         var newEvent = EventMappings.ToEntity(request);
@@ -53,20 +54,15 @@ public class EventsController : ControllerBase
     [HttpPut("{id}")]
     public ActionResult<EventResponseDto> ChangeEvent(int id, [FromBody] EventRequestDto request)
     {
-        // if (string.IsNullOrWhiteSpace(request.Title))
-        // {
-        //     return BadRequest(new { message = "Title is required" });
-        // }
-        
         if (request.EndAt <= request.StartAt)
         {
-            return BadRequest(new { message = "EndAt must be later than StartAt" });
+            return BadRequest(new { message = ErrorMessages.EndAtMustBeLater });
         }
         
         var existingEvent = _eventService.GetEvent(id);
         if (existingEvent == null)
         {
-            return NotFound(new { message = $"Event with id {id} not found" });
+            return NotFound(new { message = string.Format(ErrorMessages.NotFound, id) });
         }
         
         EventMappings.UpdateEntity(existingEvent, request);
@@ -80,7 +76,7 @@ public class EventsController : ControllerBase
         var existingEvent = _eventService.GetEvent(id);
         if (existingEvent == null)
         {
-            return NotFound(new { message = $"Event with id {id} not found" });
+            return NotFound(new { message = string.Format(ErrorMessages.NotFound, id) });
         }
         
         _eventService.RemoveEvent(id);

@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace EventManagementApi.DTOs;
 
 public record EventRequestDto(
