@@ -4,7 +4,7 @@ namespace EventManagementApi.Services;
 
 public interface IEventService
 {
-    List<Event> GetEvents();
+    IReadOnlyCollection<Event> GetEvents();
     Event? GetEvent(int id);
     void AddEvent(Event eventItem);
     void ChangeEvent(int id, Event eventItem);

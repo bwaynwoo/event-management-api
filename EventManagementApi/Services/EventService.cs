@@ -4,10 +4,10 @@ namespace EventManagementApi.Services;
 
 public class EventService : IEventService
 {
-    public static List<Event> Events { get; set; } = [];
+    private static List<Event> Events { get; set; } = [];
     private static int _nextId = 1;
 
-    public List<Event> GetEvents()
+    public IReadOnlyCollection<Event> GetEvents()
     {
         return Events;
     }
