@@ -25,13 +25,16 @@ public class EventService : IEventService
 
     public void UpdateEvent(int id, Event eventItem)
     {
-        var existingEvent = Events.FirstOrDefault(e => e.Id == id);
-        if (existingEvent != null)
+        foreach (var existingEvent in Events)
         {
-            existingEvent.Title = eventItem.Title;
-            existingEvent.Description = eventItem.Description;
-            existingEvent.StartAt = eventItem.StartAt;
-            existingEvent.EndAt = eventItem.EndAt;
+            if (existingEvent.Id == id) 
+            {
+                existingEvent.Title = eventItem.Title;
+                existingEvent.Description = eventItem.Description;
+                existingEvent.StartAt = eventItem.StartAt;
+                existingEvent.EndAt = eventItem.EndAt;
+                break;
+            }
         }
     }
 

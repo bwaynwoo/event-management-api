@@ -6,7 +6,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton<IEventService, EventService>();
+builder.Services.AddScoped<IEventService, EventService>();
 
 var app = builder.Build();
 
