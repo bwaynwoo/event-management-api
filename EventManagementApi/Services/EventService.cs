@@ -4,62 +4,43 @@ namespace EventManagementApi.Services;
 
 public class EventService : IEventService
 {
-    // Хранилище в памяти (имитация базы данных)
-    private readonly List<Event> _events = new();
-    private readonly object _lock = new(); // Для потокобезопасности
+    public static List<Event> Events { get; set; } = [];
+    private static int _nextId = 1;
 
-    public Task<IEnumerable<Event>> GetAllAsync()
+    public List<Event> GetEvents()
     {
-        return Task.FromResult(_events.AsEnumerable());
+        return Events;
     }
 
-    public Task<Event?> GetByIdAsync(Guid id)
+    public Event? GetEvent(int id)
     {
-        var eventItem = _events.FirstOrDefault(e => e.Id == id);
-        return Task.FromResult(eventItem);
+        return Events.FirstOrDefault(e => e.Id == id);
     }
 
-    public Task<Event> CreateAsync(Event eventItem)
+    public void AddEvent(Event eventItem)
     {
-        lock (_lock)
+        eventItem.Id = _nextId++;
+        Events.Add(eventItem);
+    }
+
+    public void ChangeEvent(int id, Event eventItem)
+    {
+        var existingEvent = Events.FirstOrDefault(e => e.Id == id);
+        if (existingEvent != null)
         {
-            eventItem.Id = Guid.NewGuid();
-            _events.Add(eventItem);
-        }
-        return Task.FromResult(eventItem);
-    }
-
-    public Task<Event?> UpdateAsync(Guid id, Event updatedEvent)
-    {
-        lock (_lock)
-        {
-            var existingEvent = _events.FirstOrDefault(e => e.Id == id);
-            if (existingEvent == null)
-            {
-                return Task.FromResult<Event?>(null);
-            }
-
-            existingEvent.Title = updatedEvent.Title;
-            existingEvent.Description = updatedEvent.Description;
-            existingEvent.StartAt = updatedEvent.StartAt;
-            existingEvent.EndAt = updatedEvent.EndAt;
-
-            return Task.FromResult<Event?>(existingEvent);
+            existingEvent.Title = eventItem.Title;
+            existingEvent.Description = eventItem.Description;
+            existingEvent.StartAt = eventItem.StartAt;
+            existingEvent.EndAt = eventItem.EndAt;
         }
     }
 
-    public Task<bool> DeleteAsync(Guid id)
+    public void RemoveEvent(int id)
     {
-        lock (_lock)
+        var eventItem = Events.FirstOrDefault(e => e.Id == id);
+        if (eventItem != null)
         {
-            var eventItem = _events.FirstOrDefault(e => e.Id == id);
-            if (eventItem == null)
-            {
-                return Task.FromResult(false);
-            }
-
-            _events.Remove(eventItem);
-            return Task.FromResult(true);
+            Events.Remove(eventItem);
         }
     }
 }

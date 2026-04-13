@@ -1,3 +1,4 @@
+using EventManagementApi;
 using EventManagementApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,8 +7,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Регистрация сервиса (Scoped — на каждый HTTP-запрос новый экземпляр)
-builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddSingleton<IEventService, EventService>();
 
 var app = builder.Build();
 
