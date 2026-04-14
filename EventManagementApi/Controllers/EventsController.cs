@@ -7,7 +7,7 @@ using EventManagementApi.Services;
 namespace EventManagementApi.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("events")]
 public class EventsController : ControllerBase
 {
     private readonly IEventService _eventService;
@@ -28,45 +28,38 @@ public class EventsController : ControllerBase
     public ActionResult<EventResponseDto> GetEvent(int id)
     {
         var eventItem = _eventService.GetEvent(id);
-        
+
         if (eventItem == null)
         {
             return NotFound(new { message = string.Format(ErrorMessages.NotFound, id) });
         }
-        
+
         return Ok(EventMappings.ToResponseDto(eventItem));
     }
 
     [HttpPost]
     public ActionResult<EventResponseDto> AddEvent([FromBody] EventRequestDto request)
     {
-        if (request.EndAt <= request.StartAt)
-        {
-            return BadRequest(new { message = ErrorMessages.EndAtMustBeLater });
-        }
-        
         var newEvent = EventMappings.ToEntity(request);
         _eventService.AddEvent(newEvent);
-        
-        return Created();
+
+        return CreatedAtAction(
+            nameof(GetEvent),
+            new { id = newEvent.Id },
+            EventMappings.ToResponseDto(newEvent));
     }
 
     [HttpPut("{id}")]
     public ActionResult<EventResponseDto> ChangeEvent(int id, [FromBody] EventRequestDto request)
     {
-        if (request.EndAt <= request.StartAt)
-        {
-            return BadRequest(new { message = ErrorMessages.EndAtMustBeLater });
-        }
-        
         var existingEvent = _eventService.GetEvent(id);
         if (existingEvent == null)
         {
             return NotFound(new { message = string.Format(ErrorMessages.NotFound, id) });
         }
-        
+
         EventMappings.UpdateEntity(existingEvent, request);
-        
+
         return Ok(EventMappings.ToResponseDto(existingEvent));
     }
 
@@ -78,7 +71,7 @@ public class EventsController : ControllerBase
         {
             return NotFound(new { message = string.Format(ErrorMessages.NotFound, id) });
         }
-        
+
         _eventService.RemoveEvent(id);
         return NoContent();
     }
