@@ -52,26 +52,13 @@ public class EventsController : ControllerBase
     [HttpPut("{id}")]
     public ActionResult<EventResponseDto> ChangeEvent(int id, [FromBody] EventRequestDto request)
     {
-        var existingEvent = _eventService.GetEvent(id);
-        if (existingEvent == null)
-        {
-            return NotFound(new { message = string.Format(ErrorMessages.NotFound, id) });
-        }
-
-        EventMappings.UpdateEntity(existingEvent, request);
-
-        return Ok(EventMappings.ToResponseDto(existingEvent));
+        _eventService.UpdateEvent(id, EventMappings.ToEntity(request));
+        return Ok();
     }
 
     [HttpDelete("{id}")]
     public ActionResult RemoveEvent(int id)
     {
-        var existingEvent = _eventService.GetEvent(id);
-        if (existingEvent == null)
-        {
-            return NotFound(new { message = string.Format(ErrorMessages.NotFound, id) });
-        }
-
         _eventService.RemoveEvent(id);
         return NoContent();
     }

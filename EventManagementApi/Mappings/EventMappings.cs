@@ -26,12 +26,4 @@ public static class EventMappings
             entity.EndAt
         );
     }
-    
-    public static void UpdateEntity(Event existing, EventRequestDto dto)
-    {
-        existing.Title = dto.Title;
-        existing.Description = dto.Description;
-        existing.StartAt = dto.StartAt;
-        existing.EndAt = dto.EndAt;
-    }
 }
