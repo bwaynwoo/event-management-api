@@ -17,7 +17,7 @@ REST API для управления мероприятиями.
 ### 1. Клонировать репозиторий
 
 ```bash
-git clone --branch sprint-1 https://github.com/bwaynwoo/event-management-api.git
+git clone https://github.com/bwaynwoo/event-management-api.git
 cd event-management-api/EventManagementApi
 ```
 
@@ -45,11 +45,11 @@ http://localhost:5000/swagger/index.html
 
 | Метод |	Endpoint	| Описание |
 | ------ | ------------ | -------- |
-|GET	|/api/events	|Получить список всех мероприятий|
-|GET	|/api/events/{id}	|Получить мероприятие по ID
-|POST	|/api/events	|Создать новое мероприятие
-|PUT	|/api/events/{id}	|Обновить мероприятие целиком|
-|DELETE	|/api/events/{id}	|Удалить мероприятие
+|GET	|/events	|Получить список всех мероприятий|
+|GET	|/events/{id}	|Получить мероприятие по ID
+|POST	|/events	|Создать новое мероприятие
+|PUT	|/events/{id}	|Обновить мероприятие целиком|
+|DELETE	|/events/{id}	|Удалить мероприятие
 
 ### Особенности реализации
 * Данные хранятся в памяти приложения (List<Event>)
