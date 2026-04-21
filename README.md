@@ -14,24 +14,34 @@ REST API для управления мероприятиями.
 
 ## Установка и запуск
 
-### 1. Клонировать репозиторий
+* Клонировать репозиторий
 
 ```bash
 git clone https://github.com/bwaynwoo/event-management-api.git
-cd event-management-api/EventManagementApi
 ```
 
-### 2. Собрать проект
+* Перейти в репозиторий
+```bash
+cd event-management-api
+```
+
+* Переключиться на ветку sprint-2
+
+```bash
+git switch sprint-2
+```
+
+* Собрать решение
 ```bash
 dotnet build
 ```
 
-### 3. Запустить проект
+* Запустить проект
 ```bash
 dotnet run
 ```
 
-### 4. Открыть Swagger
+* Открыть Swagger\
 После запуска Swagger будет доступен по адресу:
 ```
 http://localhost:5000/swagger/index.html

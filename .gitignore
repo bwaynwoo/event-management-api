@@ -53,6 +53,5 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
-/EventManagementApi
 .DS_Store
 EventManagementApi.sln.DotSettings.user
