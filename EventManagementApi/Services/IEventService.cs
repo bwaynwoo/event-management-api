@@ -10,4 +10,5 @@ public interface IEventService
     void AddEvent(Event eventItem);
     void UpdateEvent(int id, Event eventItem);
     void RemoveEvent(int id);
+    void Clear();
 }

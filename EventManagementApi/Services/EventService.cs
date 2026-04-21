@@ -75,7 +75,11 @@ public class EventService : IEventService
         {
             throw new NotFoundException("Event", id);
         }
-
-        ;
+    }
+    
+    public void Clear()
+    {
+        Events.Clear();
+        _nextId = 1;
     }
 }
