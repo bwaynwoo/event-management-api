@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using EventManagementApi.Exceptions;
 using EventManagementApi.Models;
 
 namespace EventManagementApi.Services;
@@ -13,9 +14,13 @@ public class EventService : IEventService
         return Events.Values.ToList();
     }
 
-    public Event? GetEvent(int id)
+    public Event GetEvent(int id)
     {
-        Events.TryGetValue(id, out var eventItem);
+        if (!Events.TryGetValue(id, out var eventItem))
+        {
+            throw new NotFoundException("Event", id);
+        }
+        
         return eventItem;
     }
 
@@ -27,11 +32,19 @@ public class EventService : IEventService
 
     public void UpdateEvent(int id, Event eventItem)
     {
-        Events.TryUpdate(id, eventItem, Events[id]);
+        if (!Events.TryGetValue(id, out var oldEvent))
+        {
+            throw new NotFoundException("Event", id);
+        }
+    
+        Events.TryUpdate(id, eventItem, oldEvent);
     }
 
     public void RemoveEvent(int id)
     {
-        Events.TryRemove(id, out _);
+        if(!Events.TryRemove(id, out _))
+        {
+            throw new NotFoundException("Event", id);
+        };
     }
 }
