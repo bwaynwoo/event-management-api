@@ -17,13 +17,9 @@ public class EventsController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IReadOnlyCollection<EventResponseDto>> GetEvents(
-        [FromQuery] string? title,
-        [FromQuery] DateTime? from,
-        [FromQuery] DateTime? to
-    )
+    public ActionResult<IReadOnlyCollection<EventResponseDto>> GetEvents([FromQuery] GetEventsRequestDto request)
     {
-        return Ok(_eventService.GetEvents(title, from, to));
+        return Ok(_eventService.GetEvents(request));
     }
 
     [HttpGet("{id}")]

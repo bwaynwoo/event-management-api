@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using EventManagementApi.DTOs;
 using EventManagementApi.Exceptions;
 using EventManagementApi.Models;
 
@@ -9,27 +10,37 @@ public class EventService : IEventService
     private static readonly ConcurrentDictionary<int, Event> Events = new();
     private static int _nextId = 1;
 
-    public IReadOnlyCollection<Event> GetEvents(string? title = null, DateTime? from = null, DateTime? to = null)
+    public PaginatedResult<Event> GetEvents(GetEventsRequestDto dto)
     {
         var events = Events.Values.AsEnumerable();
 
-        if (!string.IsNullOrWhiteSpace(title))
+        if (!string.IsNullOrWhiteSpace(dto.Title))
         {
-            events = events.Where(e => 
-                e.Title.Contains(title, StringComparison.OrdinalIgnoreCase));
+            events = events.Where(e =>
+                e.Title.Contains(dto.Title, StringComparison.OrdinalIgnoreCase));
         }
 
-        if (from.HasValue)
+        if (dto.From.HasValue)
         {
-            events = events.Where(e => e.StartAt >= from.Value);
+            events = events.Where(e => e.StartAt >= dto.From.Value);
         }
 
-        if (to.HasValue)
+        if (dto.To.HasValue)
         {
-            events = events.Where(e => e.EndAt <= to.Value);
+            events = events.Where(e => e.EndAt <= dto.To.Value);
         }
 
-        return events.ToList().AsReadOnly();
+        var eventsList = events.ToList();
+
+        var totalCount = eventsList.Count;
+
+        var items = eventsList
+            .Skip((dto.Page - 1) * dto.PageSize)
+            .Take(dto.PageSize)
+            .ToList()
+            .AsReadOnly();
+
+        return new PaginatedResult<Event>(dto.Page, dto.PageSize, totalCount, items);
     }
 
     public Event GetEvent(int id)
