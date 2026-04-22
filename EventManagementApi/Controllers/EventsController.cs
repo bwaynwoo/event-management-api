@@ -1,4 +1,3 @@
-using EventManagementApi.Constants;
 using Microsoft.AspNetCore.Mvc;
 using EventManagementApi.DTOs;
 using EventManagementApi.Mappings;
@@ -18,23 +17,22 @@ public class EventsController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IReadOnlyCollection<EventResponseDto>> GetEvents()
+    public ActionResult<PaginatedResult<EventResponseDto>> GetEvents([FromQuery] GetEventsRequestDto request)
     {
-        var events = _eventService.GetEvents();
-        return Ok(events);
+        var paginatedEvents = _eventService.GetEvents(request);
+        var result = new PaginatedResult<EventResponseDto>(
+            paginatedEvents.Page,
+            paginatedEvents.PageSize,
+            paginatedEvents.TotalCount,
+            paginatedEvents.Items.Select(EventMappings.ToResponseDto).ToList()
+        );
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
     public ActionResult<EventResponseDto> GetEvent(int id)
     {
-        var eventItem = _eventService.GetEvent(id);
-
-        if (eventItem == null)
-        {
-            return NotFound(new { message = string.Format(ErrorMessages.NotFound, id) });
-        }
-
-        return Ok(EventMappings.ToResponseDto(eventItem));
+        return Ok(EventMappings.ToResponseDto(_eventService.GetEvent(id)));
     }
 
     [HttpPost]
