@@ -17,9 +17,16 @@ public class EventsController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IReadOnlyCollection<EventResponseDto>> GetEvents([FromQuery] GetEventsRequestDto request)
+    public ActionResult<PaginatedResult<EventResponseDto>> GetEvents([FromQuery] GetEventsRequestDto request)
     {
-        return Ok(_eventService.GetEvents(request));
+        var paginatedEvents = _eventService.GetEvents(request);
+        var result = new PaginatedResult<EventResponseDto>(
+            paginatedEvents.Page,
+            paginatedEvents.PageSize,
+            paginatedEvents.TotalCount,
+            paginatedEvents.Items.Select(EventMappings.ToResponseDto).ToList()
+        );
+        return Ok(result);
     }
 
     [HttpGet("{id}")]

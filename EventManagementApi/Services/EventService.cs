@@ -35,6 +35,7 @@ public class EventService : IEventService
         var totalCount = eventsList.Count;
 
         var items = eventsList
+            .OrderBy(e => e.Id)
             .Skip((dto.Page - 1) * dto.PageSize)
             .Take(dto.PageSize)
             .ToList()
@@ -66,6 +67,7 @@ public class EventService : IEventService
             throw new NotFoundException("Event", id);
         }
 
+        eventItem.Id = id;
         Events.TryUpdate(id, eventItem, oldEvent);
     }
 
