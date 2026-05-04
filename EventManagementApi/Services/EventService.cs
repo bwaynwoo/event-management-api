@@ -7,8 +7,7 @@ namespace EventManagementApi.Services;
 
 public class EventService : IEventService
 {
-    private static readonly ConcurrentDictionary<int, Event> Events = new();
-    private static int _nextId = 1;
+    private static readonly ConcurrentDictionary<Guid, Event> Events = new();
 
     public PaginatedResult<Event> GetEvents(GetEventsRequestDto dto)
     {
@@ -44,7 +43,7 @@ public class EventService : IEventService
         return new PaginatedResult<Event>(dto.Page, dto.PageSize, totalCount, items);
     }
 
-    public Event GetEvent(int id)
+    public Event GetEvent(Guid id)
     {
         if (!Events.TryGetValue(id, out var eventItem))
         {
@@ -56,11 +55,11 @@ public class EventService : IEventService
 
     public void AddEvent(Event eventItem)
     {
-        eventItem.Id = _nextId++;
+        eventItem.Id = Guid.NewGuid();
         Events.TryAdd(eventItem.Id, eventItem);
     }
 
-    public void UpdateEvent(int id, Event eventItem)
+    public void UpdateEvent(Guid id, Event eventItem)
     {
         if (!Events.TryGetValue(id, out var oldEvent))
         {
@@ -71,7 +70,7 @@ public class EventService : IEventService
         Events.TryUpdate(id, eventItem, oldEvent);
     }
 
-    public void RemoveEvent(int id)
+    public void RemoveEvent(Guid id)
     {
         if (!Events.TryRemove(id, out _))
         {
@@ -82,6 +81,5 @@ public class EventService : IEventService
     public void Clear()
     {
         Events.Clear();
-        _nextId = 1;
     }
 }

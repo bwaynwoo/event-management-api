@@ -30,7 +30,7 @@ public class EventsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public ActionResult<EventResponseDto> GetEvent(int id)
+    public ActionResult<EventResponseDto> GetEvent(Guid id)
     {
         return Ok(EventMappings.ToResponseDto(_eventService.GetEvent(id)));
     }
@@ -48,14 +48,14 @@ public class EventsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public ActionResult<EventResponseDto> ChangeEvent(int id, [FromBody] EventRequestDto request)
+    public ActionResult<EventResponseDto> ChangeEvent(Guid id, [FromBody] EventRequestDto request)
     {
         _eventService.UpdateEvent(id, EventMappings.ToEntity(request));
         return Ok();
     }
 
     [HttpDelete("{id}")]
-    public ActionResult RemoveEvent(int id)
+    public ActionResult RemoveEvent(Guid id)
     {
         _eventService.RemoveEvent(id);
         return NoContent();

@@ -174,11 +174,20 @@ public class EventServiceTests : IDisposable
     public void GetEvents_ShouldCombineFilters()
     {
         _eventService.AddEvent(new Event
-            { Title = "Summer Conference", StartAt = new DateTime(2025, 6, 1), EndAt = new DateTime(2025, 6, 5) });
+        {
+            Title = "Summer Conference", StartAt = new DateTime(2025, 6, 1),
+            EndAt = new DateTime(2025, 6, 5)
+        });
         _eventService.AddEvent(new Event
-            { Title = "Summer Workshop", StartAt = new DateTime(2025, 7, 1), EndAt = new DateTime(2025, 7, 5) });
+        {
+            Title = "Summer Workshop", StartAt = new DateTime(2025, 7, 1),
+            EndAt = new DateTime(2025, 7, 5)
+        });
         _eventService.AddEvent(new Event
-            { Title = "Winter Conference", StartAt = new DateTime(2025, 12, 1), EndAt = new DateTime(2025, 12, 5) });
+        {
+            Title = "Winter Conference", StartAt = new DateTime(2025, 12, 1),
+            EndAt = new DateTime(2025, 12, 5)
+        });
 
         var request = new GetEventsRequestDto
         {
@@ -195,27 +204,30 @@ public class EventServiceTests : IDisposable
     [Fact(DisplayName = "Попытка получить событие с несуществующим ID")]
     public void GetEvent_ShouldThrowNotFoundException_WhenIdDoesNotExist()
     {
-        var action = () => _eventService.GetEvent(77);
+        var id = Guid.NewGuid();
+        var action = () => _eventService.GetEvent(id);
 
-        action.Should().Throw<NotFoundException>().WithMessage("Event with id 77 was not found");
+        action.Should().Throw<NotFoundException>().WithMessage($"Event with id {id} was not found");
     }
 
     [Fact(DisplayName = "Попытка обновить событие с несуществующим ID")]
     public void UpdateEvent_ShouldThrowNotFoundException_WhenIdDoesNotExist()
     {
         var updateEvent = new Event { Title = "Test", StartAt = DateTime.Now, EndAt = DateTime.Now.AddDays(1) };
+        var id = Guid.NewGuid();
 
-        var action = () => _eventService.UpdateEvent(99999, updateEvent);
+        var action = () => _eventService.UpdateEvent(id, updateEvent);
 
-        action.Should().Throw<NotFoundException>().WithMessage("Event with id 99999 was not found");
+        action.Should().Throw<NotFoundException>().WithMessage($"Event with id {id} was not found");
     }
 
     [Fact(DisplayName = "Попытка удалить событие с несуществующим ID")]
     public void RemoveEvent_ShouldThrowNotFoundException_WhenIdDoesNotExist()
     {
-        var action = () => _eventService.RemoveEvent(99999);
+        var id = Guid.NewGuid();
+        var action = () => _eventService.RemoveEvent(id);
 
-        action.Should().Throw<NotFoundException>().WithMessage("Event with id 99999 was not found");
+        action.Should().Throw<NotFoundException>().WithMessage($"Event with id {id} was not found");
     }
 
     [Fact(DisplayName = "Title - пустая строка (граничное значение)")]

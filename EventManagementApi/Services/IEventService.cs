@@ -6,9 +6,9 @@ namespace EventManagementApi.Services;
 public interface IEventService
 {
     PaginatedResult<Event> GetEvents(GetEventsRequestDto dto);
-    Event GetEvent(int id);
+    Event GetEvent(Guid id);
     void AddEvent(Event eventItem);
-    void UpdateEvent(int id, Event eventItem);
-    void RemoveEvent(int id);
+    void UpdateEvent(Guid id, Event eventItem);
+    void RemoveEvent(Guid id);
     void Clear();
 }

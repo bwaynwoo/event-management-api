@@ -1,7 +1,7 @@
 namespace EventManagementApi.DTOs;
 
 public record EventResponseDto(
-    int Id,
+    Guid Id,
     string Title,
     string? Description,
     DateTime StartAt,
