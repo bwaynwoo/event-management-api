@@ -4,9 +4,9 @@ namespace EventManagementApi.Models;
 
 public class Booking
 {
-    Guid Id { get; set; }
-    Guid EventId { get; set; }
-    BookingStatus Status { get; set; }
-    DateTime CreatedAt { get; set; }
-    DateTime ProcessedAt { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid EventId { get; set; }
+    public BookingStatus Status { get; set; } = BookingStatus.Pending;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? ProcessedAt { get; set; }
 }
