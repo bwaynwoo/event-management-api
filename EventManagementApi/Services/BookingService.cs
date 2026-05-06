@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using EventManagementApi.Enums;
 using EventManagementApi.Exceptions;
 using EventManagementApi.Models;
 
@@ -35,5 +36,26 @@ public class BookingService(IEventService eventService) : IBookingService
         }
 
         return await Task.FromResult(bookingItem);
+    }
+
+    public async Task<Booking> GetPendingBookingAsync()
+    {
+        var pendingBookings =
+            Bookings.Where(e => e.Value.Status == BookingStatus.Pending);
+        if (!pendingBookings.Any())
+        {
+            return null;
+        }
+
+        var pendingBooking = pendingBookings.FirstOrDefault().Value;
+
+        return await Task.FromResult(pendingBooking);
+    }
+
+    public Task SetConfirmedStatusAsync(Guid bookingId)
+    {
+        Bookings[bookingId].Status = BookingStatus.Confirmed;
+        Bookings[bookingId].ProcessedAt = DateTime.UtcNow;
+        return Task.CompletedTask;
     }
 }
