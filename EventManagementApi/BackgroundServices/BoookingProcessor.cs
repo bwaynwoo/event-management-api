@@ -17,6 +17,8 @@ public class BookingProcessor : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        _logger.LogInformation("BookingProcessor started");
+        
         while (!stoppingToken.IsCancellationRequested)
         {
             using var scope = _scopeFactory.CreateScope();
@@ -27,8 +29,11 @@ public class BookingProcessor : BackgroundService
 
             if (pendingBooking != null)
             {
+                _logger.LogInformation("Processing booking {BookingId}", pendingBooking.Id);
                 await bookingService.SetConfirmedStatusAsync(pendingBooking.Id);
+                _logger.LogInformation("Booking {BookingId} confirmed", pendingBooking.Id); 
             }
         }
+        _logger.LogInformation("BookingProcessor stopping");
     }
 }
