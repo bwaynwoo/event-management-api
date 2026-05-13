@@ -11,14 +11,7 @@ public class BookingService(IEventService eventService) : IBookingService
 
     public async Task<Booking> CreateBookingAsync(Guid eventId)
     {
-        try
-        {
-            var existingEvent = eventService.GetEvent(eventId);
-        }
-        catch (NotFoundException e)
-        {
-            return null;
-        }
+        eventService.GetEvent(eventId);
 
         var booking = new Booking
         {
@@ -32,7 +25,7 @@ public class BookingService(IEventService eventService) : IBookingService
     {
         if (!Bookings.TryGetValue(bookingId, out var bookingItem))
         {
-            return null;
+            throw new NotFoundException("Booking", bookingId);
         }
 
         return await Task.FromResult(bookingItem);

@@ -22,7 +22,7 @@ public class BookingProcessor : BackgroundService
             using var scope = _scopeFactory.CreateScope();
             var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
 
-            await Task.Delay(10000, stoppingToken);
+            await Task.Delay(2000, stoppingToken);
             var pendingBooking = await bookingService.GetPendingBookingAsync();
 
             if (pendingBooking != null)
