@@ -31,7 +31,7 @@ public class BookingService(IEventService eventService) : IBookingService
         return await Task.FromResult(bookingItem);
     }
 
-    public async Task<Booking> GetPendingBookingAsync()
+    public async Task<Booking?> GetPendingBookingAsync()
     {
         var pendingBookings =
             Bookings.Where(e => e.Value.Status == BookingStatus.Pending);
