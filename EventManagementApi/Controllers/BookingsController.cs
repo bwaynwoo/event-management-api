@@ -20,11 +20,6 @@ public class BookingsController : ControllerBase
     {
         var booking = await _bookingService.CreateBookingAsync(eventId);
 
-        if (booking == null)
-        {
-            return NotFound($"Event with id {eventId} was not found");
-        }
-        
         var locationUrl = Url.ActionLink(nameof(GetBooking), null, new { id = booking.Id });
         return Accepted(locationUrl, booking);
     }
@@ -34,6 +29,6 @@ public class BookingsController : ControllerBase
     {
         var booking = await _bookingService.GetBookingByIdAsync(id);
 
-        return booking != null ? Ok(booking.ToResponse()) : NotFound($"Booking with id {id} was not found");
+        return Ok(booking.ToResponse());
     }
 }
