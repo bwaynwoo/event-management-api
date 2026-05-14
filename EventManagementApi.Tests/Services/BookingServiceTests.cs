@@ -17,8 +17,8 @@ public class BookingServiceTests
         _bookingService = new BookingService(_eventService);
     }
 
-    [Fact(DisplayName = "Cоздание брони для существующего события")]
-    public async Task CreateBooking_ShouldSuccess_WhenEventExists()
+    [Fact(DisplayName = "Создание брони для существующего события")]
+    public async Task CreateBooking_ShouldSuccess()
     {
         var newEvent = new Event
         {
@@ -37,7 +37,7 @@ public class BookingServiceTests
         booking.Id.Should().NotBeEmpty();
     }
 
-    [Fact(DisplayName = "Cоздание нескольких броней для одного события — все создаются с уникальными Id")]
+    [Fact(DisplayName = "Создание нескольких броней для одного события — все создаются с уникальными Id")]
     public async Task CreateBookingsForOneEvent_ShouldSuccess_WithDifferentIds()
     {
         var newEvent = new Event
