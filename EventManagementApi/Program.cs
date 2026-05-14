@@ -1,3 +1,4 @@
+using EventManagementApi.BackgroundServices;
 using EventManagementApi.Middlewares;
 using EventManagementApi.Services;
 
@@ -8,6 +9,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+
+builder.Services.AddHostedService<BookingProcessor>();
 
 var app = builder.Build();
 
