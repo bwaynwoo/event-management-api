@@ -24,11 +24,9 @@ public class BookingsController : ControllerBase
         {
             return NotFound($"Event with id {eventId} was not found");
         }
-
-        return CreatedAtAction(
-            nameof(GetBooking),
-            new { id = booking.Id },
-            booking.ToResponse());
+        
+        var locationUrl = Url.ActionLink(nameof(GetBooking), null, new { id = booking.Id });
+        return Accepted(locationUrl, booking);
     }
 
     [HttpGet("bookings/{id}")]
