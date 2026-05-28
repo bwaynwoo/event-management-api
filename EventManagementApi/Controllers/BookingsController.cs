@@ -7,6 +7,7 @@ namespace EventManagementApi.Controllers;
 
 [ApiController]
 [ProducesResponseType(StatusCodes.Status404NotFound)]
+[ProducesResponseType(StatusCodes.Status409Conflict)]
 public class BookingsController : ControllerBase
 {
     private readonly IBookingService _bookingService;

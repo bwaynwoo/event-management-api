@@ -8,17 +8,32 @@ namespace EventManagementApi.Services;
 public class BookingService(IEventService eventService) : IBookingService
 {
     private static readonly ConcurrentDictionary<Guid, Booking> Bookings = new();
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     public async Task<Booking> CreateBookingAsync(Guid eventId)
     {
-        eventService.GetEvent(eventId);
-
-        var booking = new Booking
+        await _semaphore.WaitAsync();
+        try
         {
-            EventId = eventId,
-        };
-        Bookings.TryAdd(booking.Id, booking);
-        return await Task.FromResult(booking);
+            var eventForBooking = eventService.GetEvent(eventId);
+
+            if (!eventForBooking.TryReserveSeats())
+            {
+                throw new NoAvailableSeatsException();
+            }
+
+            var booking = new Booking
+            {
+                EventId = eventId,
+            };
+            Bookings.TryAdd(booking.Id, booking);
+
+            return await Task.FromResult(booking);
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 
     public async Task<Booking> GetBookingByIdAsync(Guid bookingId)
