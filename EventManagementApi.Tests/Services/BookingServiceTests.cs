@@ -265,6 +265,7 @@ public class BookingServiceTests
         int failedTasks =
             tasks.Count(t => t is { Exception.InnerException: NoAvailableSeatsException });
 
+        newEvent.AvailableSeats.Should().Be(0);
         successfulTasks.Should().Be(5);
         failedTasks.Should().Be(15);
     }
