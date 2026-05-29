@@ -34,6 +34,11 @@ public record EventRequestDto(
         {
             errors.Add(new ValidationResult(string.Format(ErrorMessages.FieldIsRequired, nameof(TotalSeats))));
         }
+        
+        if (TotalSeats <= 0)
+        {
+            errors.Add(new ValidationResult(string.Format(ErrorMessages.FieldShouldGreaterThanZero, nameof(TotalSeats))));
+        }
 
         return errors;
     }
