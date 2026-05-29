@@ -1,3 +1,5 @@
+using EventManagementApi.Exceptions;
+using EventManagementApi.Models;
 using EventManagementApi.Services;
 
 namespace EventManagementApi.BackgroundServices;
@@ -6,6 +8,8 @@ public class BookingProcessor : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<BookingProcessor> _logger;
+    private readonly SemaphoreSlim _processingSemaphore = new(1, 1);
+    private const int ProcessingDelay = 2000;
 
     public BookingProcessor(
         IServiceScopeFactory scopeFactory,
@@ -23,18 +27,65 @@ public class BookingProcessor : BackgroundService
         {
             using var scope = _scopeFactory.CreateScope();
             var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
+            var eventService = scope.ServiceProvider.GetRequiredService<IEventService>();
 
-            var pendingBooking = await bookingService.GetPendingBookingAsync();
+            var pendingBookings = await bookingService.GetPendingBookingsAsync();
 
-            if (pendingBooking != null)
+            if (pendingBookings.Any())
             {
-                _logger.LogInformation("Processing booking {BookingId}", pendingBooking.Id);
-                await Task.Delay(2000, stoppingToken);
-                await bookingService.SetConfirmedStatusAsync(pendingBooking.Id);
-                _logger.LogInformation("Booking {BookingId} confirmed", pendingBooking.Id);
+                var tasks = pendingBookings.Select(booking =>
+                    ProcessBookingAsync(booking, bookingService, eventService, stoppingToken));
+                await Task.WhenAll(tasks);
             }
+
+            await Task.Delay(ProcessingDelay, stoppingToken);
         }
 
         _logger.LogInformation("BookingProcessor stopping");
+    }
+
+    private async Task ProcessBookingAsync(Booking booking, IBookingService bookingService,
+        IEventService eventService, CancellationToken stoppingToken)
+    {
+        _logger.LogInformation("Processing booking {BookingId}", booking.Id);
+        await Task.Delay(ProcessingDelay, stoppingToken);
+        await _processingSemaphore.WaitAsync(stoppingToken);
+        try
+        {
+            eventService.GetEvent(booking.EventId);
+            booking.Confirm();
+            _logger.LogInformation("Booking {BookingId} confirmed", booking.Id);
+        }
+        catch (NotFoundException exception)
+        {
+            booking.Reject();
+            _logger.LogWarning(exception, "Booking {BookingId} rejected", booking.Id);
+        }
+        catch (OperationCanceledException exception)
+        {
+            booking.Reject();
+            var eventForBooking = eventService.GetEvent(booking.EventId);
+            eventForBooking.ReleaseSeats();
+            _logger.LogWarning(exception, "Booking {BookingId} is canceled", booking.Id);
+        }
+        catch (NoAvailableSeatsException exception)
+        {
+            booking.Reject();
+            _logger.LogWarning(exception, "Booking {BookingId} rejected - no available seats for event {EventId}",
+                booking.Id, booking.EventId);
+        }
+        catch (Exception exception)
+        {
+            booking.Reject();
+            var eventForBooking = eventService.GetEvent(booking.EventId);
+            eventForBooking.ReleaseSeats();
+            _logger.LogWarning(exception, "Booking {BookingId} rejected", booking.Id);
+        }
+        finally
+        {
+            _processingSemaphore.Release();
+        }
+
+        _logger.LogInformation("Booking {BookingId} confirmed", booking.Id);
     }
 }

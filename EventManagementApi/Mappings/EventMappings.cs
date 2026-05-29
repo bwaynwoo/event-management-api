@@ -12,7 +12,8 @@ public static class EventMappings
             Title = dto.Title,
             Description = dto.Description,
             StartAt = dto.StartAt,
-            EndAt = dto.EndAt
+            EndAt = dto.EndAt,
+            TotalSeats = dto.TotalSeats!.Value,
         };
     }
     
@@ -23,7 +24,9 @@ public static class EventMappings
             entity.Title,
             entity.Description,
             entity.StartAt,
-            entity.EndAt
+            entity.EndAt,
+            entity.TotalSeats,
+            entity.AvailableSeats
         );
     }
 }

@@ -7,6 +7,7 @@ namespace EventManagementApi.Controllers;
 
 [ApiController]
 [ProducesResponseType(StatusCodes.Status404NotFound)]
+[ProducesResponseType(StatusCodes.Status409Conflict)]
 public class BookingsController : ControllerBase
 {
     private readonly IBookingService _bookingService;
@@ -23,7 +24,7 @@ public class BookingsController : ControllerBase
         var booking = await _bookingService.CreateBookingAsync(eventId);
 
         var locationUrl = Url.ActionLink(nameof(GetBooking), "Bookings", new { id = booking.Id });
-        return Accepted(locationUrl, booking);
+        return Accepted(locationUrl, booking.ToResponse());
     }
 
     [HttpGet("bookings/{id}")]

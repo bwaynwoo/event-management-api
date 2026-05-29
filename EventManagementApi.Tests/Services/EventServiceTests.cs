@@ -6,17 +6,14 @@ using FluentAssertions;
 
 namespace EventManagementApi.Tests.Services;
 
-public class EventServiceTests : IDisposable
+[Collection("Sequential")]
+public class EventServiceTests
 {
     private readonly EventService _eventService;
 
     public EventServiceTests()
     {
         _eventService = new EventService();
-    }
-
-    public void Dispose()
-    {
         _eventService.Clear();
     }
 
@@ -75,7 +72,7 @@ public class EventServiceTests : IDisposable
         var existingEvent = new Event
             { Title = "Old Title", Description = "Old Desc", StartAt = DateTime.Now, EndAt = DateTime.Now.AddDays(1) };
         _eventService.AddEvent(existingEvent);
-
+        
         var updatedEvent = new Event
         {
             Title = "New Title", Description = "New Desc", StartAt = DateTime.Now.AddDays(2),

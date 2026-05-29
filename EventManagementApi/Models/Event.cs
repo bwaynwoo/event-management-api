@@ -7,4 +7,23 @@ public class Event
     public string? Description { get; set; }
     public DateTime StartAt { get; set; }
     public DateTime EndAt { get; set; }
+    public int TotalSeats { get; set; }
+
+    public int AvailableSeats { get; set; }
+
+    public bool TryReserveSeats(int count = 1)
+    {
+        if (AvailableSeats - count < 0)
+        {
+            return false;
+        }
+
+        AvailableSeats = AvailableSeats - count;
+        return true;
+    }
+
+    public void ReleaseSeats(int count = 1)
+    {
+        AvailableSeats = AvailableSeats + count;
+    }
 }

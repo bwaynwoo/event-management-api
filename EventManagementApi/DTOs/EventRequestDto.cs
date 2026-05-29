@@ -7,7 +7,8 @@ public record EventRequestDto(
     string Title,
     string? Description,
     DateTime StartAt,
-    DateTime EndAt
+    DateTime EndAt,
+    int? TotalSeats
 ) : IValidatableObject
 {
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -18,16 +19,27 @@ public record EventRequestDto(
         {
             errors.Add(new ValidationResult(string.Format(ErrorMessages.FieldIsRequired, nameof(StartAt))));
         }
-        
+
         if (EndAt == default)
         {
             errors.Add(new ValidationResult(string.Format(ErrorMessages.FieldIsRequired, nameof(EndAt))));
         }
-        
+
         if (EndAt <= StartAt)
         {
             errors.Add(new ValidationResult(ErrorMessages.EndAtMustBeLater));
         }
+
+        if (TotalSeats == null)
+        {
+            errors.Add(new ValidationResult(string.Format(ErrorMessages.FieldIsRequired, nameof(TotalSeats))));
+        }
+        
+        if (TotalSeats <= 0)
+        {
+            errors.Add(new ValidationResult(string.Format(ErrorMessages.FieldShouldGreaterThanZero, nameof(TotalSeats))));
+        }
+
         return errors;
     }
 }

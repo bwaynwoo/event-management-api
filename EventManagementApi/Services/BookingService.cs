@@ -8,17 +8,32 @@ namespace EventManagementApi.Services;
 public class BookingService(IEventService eventService) : IBookingService
 {
     private static readonly ConcurrentDictionary<Guid, Booking> Bookings = new();
+    private static readonly SemaphoreSlim _semaphore = new(1, 1);
 
     public async Task<Booking> CreateBookingAsync(Guid eventId)
     {
-        eventService.GetEvent(eventId);
-
-        var booking = new Booking
+        await _semaphore.WaitAsync();
+        try
         {
-            EventId = eventId,
-        };
-        Bookings.TryAdd(booking.Id, booking);
-        return await Task.FromResult(booking);
+            var eventForBooking = eventService.GetEvent(eventId);
+
+            if (!eventForBooking.TryReserveSeats())
+            {
+                throw new NoAvailableSeatsException();
+            }
+
+            var booking = new Booking
+            {
+                EventId = eventId,
+            };
+            Bookings.TryAdd(booking.Id, booking);
+
+            return await Task.FromResult(booking);
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 
     public async Task<Booking> GetBookingByIdAsync(Guid bookingId)
@@ -31,24 +46,13 @@ public class BookingService(IEventService eventService) : IBookingService
         return await Task.FromResult(bookingItem);
     }
 
-    public async Task<Booking?> GetPendingBookingAsync()
+    public async Task<IReadOnlyCollection<Booking>> GetPendingBookingsAsync()
     {
         var pendingBookings =
-            Bookings.Where(e => e.Value.Status == BookingStatus.Pending);
-        if (!pendingBookings.Any())
-        {
-            return null;
-        }
+            Bookings.Where(e => e.Value.Status == BookingStatus.Pending)
+                .Select(e => e.Value)
+                .ToList();
 
-        var pendingBooking = pendingBookings.FirstOrDefault().Value;
-
-        return await Task.FromResult(pendingBooking);
-    }
-
-    public Task SetConfirmedStatusAsync(Guid bookingId)
-    {
-        Bookings[bookingId].Status = BookingStatus.Confirmed;
-        Bookings[bookingId].ProcessedAt = DateTime.UtcNow;
-        return Task.CompletedTask;
+        return await Task.FromResult(pendingBookings);
     }
 }
