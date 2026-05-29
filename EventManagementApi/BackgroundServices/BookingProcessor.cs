@@ -9,6 +9,7 @@ public class BookingProcessor : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<BookingProcessor> _logger;
     private readonly SemaphoreSlim _processingSemaphore = new(1, 1);
+    private readonly int _processingDelay = 2000;
 
     public BookingProcessor(
         IServiceScopeFactory scopeFactory,
@@ -45,7 +46,7 @@ public class BookingProcessor : BackgroundService
         IEventService eventService, CancellationToken stoppingToken)
     {
         _logger.LogInformation("Processing booking {BookingId}", booking.Id);
-        await Task.Delay(2000, stoppingToken);
+        await Task.Delay(_processingDelay, stoppingToken);
         await _processingSemaphore.WaitAsync(stoppingToken);
         try
         {

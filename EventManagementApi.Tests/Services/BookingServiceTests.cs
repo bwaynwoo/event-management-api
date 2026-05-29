@@ -6,6 +6,7 @@ using FluentAssertions;
 
 namespace EventManagementApi.Tests.Services;
 
+[Collection("Sequential")]
 public class BookingServiceTests
 {
     private readonly BookingService _bookingService;
@@ -15,7 +16,6 @@ public class BookingServiceTests
     {
         _eventService = new EventService();
         _bookingService = new BookingService(_eventService);
-        _eventService.Clear();
     }
 
     [Fact(DisplayName = "Создание брони для существующего события")]
@@ -118,18 +118,11 @@ public class BookingServiceTests
     [Fact(DisplayName = "Создание брони для удалённого события")]
     public async Task CreateBooking_ShouldFail_WhenEventDeleted()
     {
-        var newEvent = new Event
-        {
-            Title = "Test Event",
-            Description = "Test Description",
-            StartAt = new DateTime(2025, 1, 1),
-            EndAt = new DateTime(2025, 1, 2),
-            Id = Guid.NewGuid(),
-        };
-
+        var newEvent = CreateTestEvent(1);
         _eventService.AddEvent(newEvent);
         _eventService.RemoveEvent(newEvent.Id);
-        Func<Task> act = async () => await _bookingService.CreateBookingAsync(Guid.NewGuid());
+        
+        Func<Task> act = async () => await _bookingService.CreateBookingAsync(newEvent.Id);
 
         await act.Should().ThrowExactlyAsync<NotFoundException>();
     }
