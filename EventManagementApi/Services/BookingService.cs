@@ -46,24 +46,19 @@ public class BookingService(IEventService eventService) : IBookingService
         return await Task.FromResult(bookingItem);
     }
 
-    public async Task<Booking?> GetPendingBookingAsync()
+    public async Task<IReadOnlyCollection<Booking>> GetPendingBookingsAsync()
     {
         var pendingBookings =
-            Bookings.Where(e => e.Value.Status == BookingStatus.Pending);
-        if (!pendingBookings.Any())
-        {
-            return null;
-        }
+            Bookings.Where(e => e.Value.Status == BookingStatus.Pending)
+                .Select(e => e.Value)
+                .ToList();
 
-        var pendingBooking = pendingBookings.FirstOrDefault().Value;
-
-        return await Task.FromResult(pendingBooking);
+        return await Task.FromResult(pendingBookings);
     }
 
-    public Task SetConfirmedStatusAsync(Guid bookingId)
+    public Task UpdateAsync(Booking booking)
     {
-        Bookings[bookingId].Status = BookingStatus.Confirmed;
-        Bookings[bookingId].ProcessedAt = DateTime.UtcNow;
+        Bookings.TryUpdate(booking.Id, booking, booking);
         return Task.CompletedTask;
     }
 }

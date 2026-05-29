@@ -56,6 +56,7 @@ public class EventService : IEventService
     public void AddEvent(Event eventItem)
     {
         eventItem.Id = Guid.NewGuid();
+        eventItem.AvailableSeats = eventItem.TotalSeats;
         Events.TryAdd(eventItem.Id, eventItem);
     }
 
