@@ -9,7 +9,7 @@ public class BookingProcessor : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<BookingProcessor> _logger;
     private readonly SemaphoreSlim _processingSemaphore = new(1, 1);
-    private readonly int _processingDelay = 2000;
+    private const int ProcessingDelay = 2000;
 
     public BookingProcessor(
         IServiceScopeFactory scopeFactory,
@@ -37,6 +37,8 @@ public class BookingProcessor : BackgroundService
                     ProcessBookingAsync(booking, bookingService, eventService, stoppingToken));
                 await Task.WhenAll(tasks);
             }
+
+            await Task.Delay(ProcessingDelay, stoppingToken);
         }
 
         _logger.LogInformation("BookingProcessor stopping");
@@ -46,19 +48,17 @@ public class BookingProcessor : BackgroundService
         IEventService eventService, CancellationToken stoppingToken)
     {
         _logger.LogInformation("Processing booking {BookingId}", booking.Id);
-        await Task.Delay(_processingDelay, stoppingToken);
+        await Task.Delay(ProcessingDelay, stoppingToken);
         await _processingSemaphore.WaitAsync(stoppingToken);
         try
         {
             eventService.GetEvent(booking.EventId);
             booking.Confirm();
-            await bookingService.UpdateAsync(booking);
             _logger.LogInformation("Booking {BookingId} confirmed", booking.Id);
         }
         catch (NotFoundException exception)
         {
             booking.Reject();
-            await bookingService.UpdateAsync(booking);
             _logger.LogWarning(exception, "Booking {BookingId} rejected", booking.Id);
         }
         catch (OperationCanceledException exception)
@@ -66,14 +66,11 @@ public class BookingProcessor : BackgroundService
             booking.Reject();
             var eventForBooking = eventService.GetEvent(booking.EventId);
             eventForBooking.ReleaseSeats();
-            await bookingService.UpdateAsync(booking);
-            eventService.UpdateEvent(eventForBooking.Id, eventForBooking);
             _logger.LogWarning(exception, "Booking {BookingId} is canceled", booking.Id);
         }
         catch (NoAvailableSeatsException exception)
         {
             booking.Reject();
-            await bookingService.UpdateAsync(booking);
             _logger.LogWarning(exception, "Booking {BookingId} rejected - no available seats for event {EventId}",
                 booking.Id, booking.EventId);
         }
@@ -82,8 +79,6 @@ public class BookingProcessor : BackgroundService
             booking.Reject();
             var eventForBooking = eventService.GetEvent(booking.EventId);
             eventForBooking.ReleaseSeats();
-            await bookingService.UpdateAsync(booking);
-            eventService.UpdateEvent(eventForBooking.Id, eventForBooking);
             _logger.LogWarning(exception, "Booking {BookingId} rejected", booking.Id);
         }
         finally

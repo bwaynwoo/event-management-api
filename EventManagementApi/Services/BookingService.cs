@@ -55,10 +55,4 @@ public class BookingService(IEventService eventService) : IBookingService
 
         return await Task.FromResult(pendingBookings);
     }
-
-    public Task UpdateAsync(Booking booking)
-    {
-        Bookings.TryUpdate(booking.Id, booking, booking);
-        return Task.CompletedTask;
-    }
 }

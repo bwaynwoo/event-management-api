@@ -101,7 +101,6 @@ public class BookingServiceTests
         var booking = await _bookingService.CreateBookingAsync(newEvent.Id);
 
         booking.Confirm();
-        await _bookingService.UpdateAsync(booking);
         var expectedBooking = await _bookingService.GetBookingByIdAsync(booking.Id);
 
         expectedBooking.Status.Should().Be(BookingStatus.Confirmed);

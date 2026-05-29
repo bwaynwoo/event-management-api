@@ -8,5 +8,4 @@ public interface IBookingService
     Task<Booking> CreateBookingAsync(Guid eventId);
     Task<Booking> GetBookingByIdAsync(Guid bookingId);
     Task<IReadOnlyCollection<Booking>> GetPendingBookingsAsync();
-    Task UpdateAsync(Booking booking);
 }
