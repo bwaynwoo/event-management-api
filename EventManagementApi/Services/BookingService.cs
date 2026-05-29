@@ -8,7 +8,7 @@ namespace EventManagementApi.Services;
 public class BookingService(IEventService eventService) : IBookingService
 {
     private static readonly ConcurrentDictionary<Guid, Booking> Bookings = new();
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
+    private static readonly SemaphoreSlim _semaphore = new(1, 1);
 
     public async Task<Booking> CreateBookingAsync(Guid eventId)
     {
