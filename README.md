@@ -6,11 +6,36 @@ REST API для управления мероприятиями.
 - .NET 10
 - ASP.NET Core Web API
 - Swagger/OpenAPI
-- In-memory хранилище
+- PostgreSQL
 
 ## Требования
 
 - [.NET 10](https://dotnet.microsoft.com/download) или выше
+- PostgreSQL
+
+## Настройка строки подключения
+- Откройте файл appsettings.json в проекте EventManagementApi
+- Найдите секцию ConnectionStrings (если её нет — добавьте)
+- Укажите строку подключения к вашей базе данных PostgreSQL:
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=EventManagementDb;Username=postgres;Password=your_password"
+  }
+}
+```
+Параметры подключения:
+- Host — адрес сервера PostgreSQL (по умолчанию localhost)
+- Port — порт (по умолчанию 5432)
+- Database — название базы данных
+- Username — имя пользователя PostgreSQL
+- Password — пароль пользователя
+
+Важно: Не добавляйте appsettings.json с реальными паролями в систему контроля версий. Для локальной разработки используйте appsettings.Development.json или User Secrets
+
+Схема БД создаётся автоматически при запуске через EnsureCreated.
+
+В тестах используется InMemory-провайдер.
 
 ## Установка и запуск
 
@@ -25,10 +50,10 @@ git clone https://github.com/bwaynwoo/event-management-api.git
 cd event-management-api
 ```
 
-* Переключиться на ветку sprint-4
+* Переключиться на ветку sprint-5
 
 ```bash
-git switch sprint-4
+git switch sprint-5
 ```
 
 * Собрать решение

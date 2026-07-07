@@ -1,11 +1,9 @@
-using System.Collections.Concurrent;
-using EventManagementApi.Models;
+using EventManagementApi.DTOs;
 
 namespace EventManagementApi.Services;
 
-public interface IBookingService
+internal interface IBookingService
 {
-    Task<Booking> CreateBookingAsync(Guid eventId);
-    Task<Booking> GetBookingByIdAsync(Guid bookingId);
-    Task<IReadOnlyCollection<Booking>> GetPendingBookingsAsync();
+    Task<BookingInfo> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default);
+    Task<BookingInfo> GetBookingByIdAsync(Guid bookingId, CancellationToken cancellationToken = default);
 }

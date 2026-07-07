@@ -1,30 +1,39 @@
-using EventManagementApi.BackgroundServices;
-using EventManagementApi.Middlewares;
+using EventManagementApi;
+using EventManagementApi.DataAccess;
+using EventManagementApi.Endpoints;
 using EventManagementApi.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 
-builder.Services.AddHostedService<BookingProcessor>();
+builder.Services.AddHostedService<BookingBackgroundService>();
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
-app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
-
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
 }
 
+app.MapOpenApi();
+app.UseSwaggerUI(c => c.SwaggerEndpoint("/openapi/v1.json", "Open Api V1"));
+
 app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
+app.UseExceptionHandler();
+
+app.MapEventEndpoints();
+app.MapBookingEndpoints();
 
 app.Run();
