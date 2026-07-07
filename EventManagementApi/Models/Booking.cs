@@ -1,24 +1,44 @@
 using EventManagementApi.Enums;
+using EventManagementApi.Exceptions;
 
 namespace EventManagementApi.Models;
 
-public class Booking
+internal sealed class Booking
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public Guid EventId { get; set; }
-    public BookingStatus Status { get; set; } = BookingStatus.Pending;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? ProcessedAt { get; set; }
-    
-    public void Reject()
+    internal Guid Id { get; private set; }
+    internal Guid EventId { get; private set; }
+    internal BookingStatus Status { get; private set; }
+    internal DateTime CreatedAt { get; private set; }
+    internal DateTime? ProcessedAt { get; private set; }
+    internal Event? Event { get; private set; }
+
+    private Booking() { }
+
+    private Booking(Guid id, Guid eventId, BookingStatus status, DateTime createdAt)
     {
-        Status = BookingStatus.Rejected;
-        ProcessedAt = DateTime.UtcNow;
+        Id = id;
+        EventId = eventId;
+        Status = status;
+        CreatedAt = createdAt;
     }
-    
-    public void Confirm()
+
+    internal static Booking CreatePending(Guid eventId)
+    {
+        if (eventId == Guid.Empty)
+            throw new ValidationException(nameof(EventId), "EventId cannot be empty");
+
+        return new Booking(Guid.NewGuid(), eventId, BookingStatus.Pending, DateTime.UtcNow);
+    }
+
+    internal void Confirm()
     {
         Status = BookingStatus.Confirmed;
+        ProcessedAt = DateTime.UtcNow;
+    }
+
+    internal void Reject()
+    {
+        Status = BookingStatus.Rejected;
         ProcessedAt = DateTime.UtcNow;
     }
 }

@@ -1,14 +1,13 @@
+using EventApi.Dto;
 using EventManagementApi.DTOs;
-using EventManagementApi.Models;
 
 namespace EventManagementApi.Services;
 
-public interface IEventService
+internal interface IEventService
 {
-    PaginatedResult<Event> GetEvents(GetEventsRequestDto dto);
-    Event GetEvent(Guid id);
-    void AddEvent(Event eventItem);
-    void UpdateEvent(Guid id, Event eventItem);
-    void RemoveEvent(Guid id);
-    void Clear();
+    Task<PaginatedResult<EventInfo>> GetAllEventsAsync(int page = 1, int pageSize = 10, DateTime? from = null, DateTime? to = null, string? title = null, CancellationToken cancellationToken = default);
+    Task<EventInfo> GetEventByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<EventInfo> CreateEventAsync(CreateEvent createEvent, CancellationToken cancellationToken = default);
+    Task<EventInfo> UpdateEventAsync(Guid id, UpdateEvent updateEvent, CancellationToken cancellationToken = default);
+    Task<bool> DeleteEventAsync(Guid id, CancellationToken cancellationToken = default);
 }

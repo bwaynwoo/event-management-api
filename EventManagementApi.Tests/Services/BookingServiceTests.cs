@@ -1,300 +1,207 @@
-﻿using EventManagementApi.Enums;
+﻿using EventManagementApi.Services;
+using EventManagementApi.DataAccess;
+using EventManagementApi.DTOs;
+using EventManagementApi.Enums;
 using EventManagementApi.Exceptions;
-using EventManagementApi.Models;
-using EventManagementApi.Services;
-using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EventManagementApi.Tests.Services;
 
-[Collection("Sequential")]
-public class BookingServiceTests
+public sealed class BookingServiceTests : IDisposable
 {
-    private readonly BookingService _bookingService;
-    private readonly EventService _eventService;
+    private readonly ServiceProvider _serviceProvider;
+    private readonly IServiceScope _scope;
+    private readonly IEventService _eventService;
+    private readonly IBookingService _bookingService;
 
     public BookingServiceTests()
     {
-        _eventService = new EventService();
-        _bookingService = new BookingService(_eventService);
+        var dbName = Guid.NewGuid().ToString();
+        var services = new ServiceCollection();
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseInMemoryDatabase(dbName));
+        services.AddScoped<IEventService, EventService>();
+        services.AddScoped<IBookingService, BookingService>();
+
+        _serviceProvider = services.BuildServiceProvider();
+        _scope = _serviceProvider.CreateScope();
+        _eventService = _scope.ServiceProvider.GetRequiredService<IEventService>();
+        _bookingService = _scope.ServiceProvider.GetRequiredService<IBookingService>();
     }
 
-    [Fact(DisplayName = "Создание брони для существующего события")]
-    public async Task CreateBooking_ShouldSuccess()
+    public void Dispose()
     {
-        var newEvent = new Event
+        _scope.Dispose();
+        _serviceProvider.Dispose();
+    }
+
+    private async Task<Guid> CreateTestEventAsync(int totalSeats = 10)
+    {
+        var futureDate = DateTime.UtcNow.AddDays(1);
+        var created = await _eventService.CreateEventAsync(new CreateEvent
         {
             Title = "Test Event",
-            Description = "Test Description",
-            StartAt = new DateTime(2025, 1, 1),
-            EndAt = new DateTime(2025, 1, 2),
-            Id = Guid.NewGuid(),
-            TotalSeats = 3,
-        };
-
-        _eventService.AddEvent(newEvent);
-        var booking = await _bookingService.CreateBookingAsync(newEvent.Id);
-
-        booking.EventId.Should().Be(newEvent.Id);
-        booking.Status.Should().Be(BookingStatus.Pending);
-        booking.Id.Should().NotBeEmpty();
+            StartAt = futureDate,
+            EndAt = futureDate.AddHours(2),
+            TotalSeats = totalSeats
+        });
+        return created.Id;
     }
 
-    [Fact(DisplayName = "Создание нескольких броней для одного события — все создаются с уникальными Id")]
-    public async Task CreateBookingsForOneEvent_ShouldSuccess_WithDifferentIds()
+    #region CreateBookingAsync Tests
+
+    [Fact]
+    public async Task CreateBookingAsync_WithValidEventId_ReturnsBookingInfoWithPendingStatus()
     {
-        var newEvent = new Event
-        {
-            Title = "Test Event",
-            Description = "Test Description",
-            StartAt = new DateTime(2025, 1, 1),
-            EndAt = new DateTime(2025, 1, 2),
-            Id = Guid.NewGuid(),
-            TotalSeats = 3,
-        };
-        _eventService.AddEvent(newEvent);
+        var eventId = await CreateTestEventAsync();
+        var result = await _bookingService.CreateBookingAsync(eventId);
 
-        var bookings = new List<Booking>
-        {
-            await _bookingService.CreateBookingAsync(newEvent.Id),
-            await _bookingService.CreateBookingAsync(newEvent.Id),
-            await _bookingService.CreateBookingAsync(newEvent.Id),
-        };
-
-        bookings.Select(e => e.Id).Should().OnlyHaveUniqueItems();
+        Assert.NotNull(result);
+        Assert.NotEqual(Guid.Empty, result.Id);
+        Assert.Equal(eventId, result.EventId);
+        Assert.Equal(BookingStatus.Pending, result.Status);
+        Assert.Null(result.ProcessedAt);
     }
 
-    [Fact(DisplayName = "Получение брони по Id — возвращается корректная информация")]
-    public async Task GetBookingsById_ShouldReturnCorrectInfo()
+    [Fact]
+    public async Task CreateBookingAsync_WithValidEventId_SetsCreatedAt()
     {
-        var newEvent = new Event
-        {
-            Title = "Test Event",
-            Description = "Test Description",
-            StartAt = new DateTime(2025, 1, 1),
-            EndAt = new DateTime(2025, 1, 2),
-            Id = Guid.NewGuid(),
-            TotalSeats = 3,
-        };
-        _eventService.AddEvent(newEvent);
-        var booking = await _bookingService.CreateBookingAsync(newEvent.Id);
+        var eventId = await CreateTestEventAsync();
+        var before = DateTime.UtcNow;
 
-        var expectedBooking = await _bookingService.GetBookingByIdAsync(booking.Id);
+        var result = await _bookingService.CreateBookingAsync(eventId);
 
-        expectedBooking.EventId.Should().Be(booking.EventId);
-        expectedBooking.Status.Should().Be(booking.Status);
-        expectedBooking.Id.Should().Be(booking.Id);
+        var after = DateTime.UtcNow;
+        Assert.InRange(result.CreatedAt, before, after);
     }
 
-    [Fact(DisplayName = "Получение брони отражает изменение статуса (после Confirm/Reject)")]
-    public async Task Booking_ShouldChangedStatus()
+    [Fact]
+    public async Task CreateBookingAsync_WithNonExistentEvent_ThrowsNotFoundException()
     {
-        var newEvent = new Event
-        {
-            Title = "Test Event",
-            Description = "Test Description",
-            StartAt = new DateTime(2025, 1, 1),
-            EndAt = new DateTime(2025, 1, 2),
-            Id = Guid.NewGuid(),
-            TotalSeats = 3,
-        };
-        _eventService.AddEvent(newEvent);
-        var booking = await _bookingService.CreateBookingAsync(newEvent.Id);
-
-        booking.Confirm();
-        var expectedBooking = await _bookingService.GetBookingByIdAsync(booking.Id);
-
-        expectedBooking.Status.Should().Be(BookingStatus.Confirmed);
+        var invalidEventId = Guid.NewGuid();
+        var exception = await Assert.ThrowsAsync<NotFoundException>(
+            () => _bookingService.CreateBookingAsync(invalidEventId));
+        Assert.Equal("Event not found", exception.Message);
     }
 
-    [Fact(DisplayName = "Создание брони для несуществующего события")]
-    public async Task CreateBooking_ShouldFail_WhenEventDoesNotExist()
+    [Fact]
+    public async Task CreateBookingAsync_MultipleBookingsForSameEvent_AllCreatedWithUniqueIds()
     {
-        Func<Task> act = async () => await _bookingService.CreateBookingAsync(Guid.NewGuid());
+        var eventId = await CreateTestEventAsync(totalSeats: 5);
 
-        await act.Should().ThrowExactlyAsync<NotFoundException>();
+        var results = new List<BookingInfo>();
+        for (int i = 0; i < 5; i++)
+            results.Add(await _bookingService.CreateBookingAsync(eventId));
+
+        var uniqueIds = results.Select(r => r.Id).Distinct();
+        Assert.Equal(5, uniqueIds.Count());
     }
 
-    [Fact(DisplayName = "Создание брони для удалённого события")]
-    public async Task CreateBooking_ShouldFail_WhenEventDeleted()
+    [Fact]
+    public async Task CreateBookingAsync_WhenNoSeatsAvailable_ThrowsNoAvailableSeatsException()
     {
-        var newEvent = CreateTestEvent(1);
-        _eventService.AddEvent(newEvent);
-        _eventService.RemoveEvent(newEvent.Id);
-        
-        Func<Task> act = async () => await _bookingService.CreateBookingAsync(newEvent.Id);
+        var eventId = await CreateTestEventAsync(totalSeats: 1);
+        await _bookingService.CreateBookingAsync(eventId);
 
-        await act.Should().ThrowExactlyAsync<NotFoundException>();
+        await Assert.ThrowsAsync<NoAvailableSeatsException>(
+            () => _bookingService.CreateBookingAsync(eventId));
     }
 
-    [Fact(DisplayName = "Получение брони по несуществующему Id")]
-    public async Task GetBooking_ShouldFail_WhenEventDoesNotExist()
+    [Fact]
+    public async Task CreateBookingAsync_DecrementsAvailableSeats()
     {
-        Func<Task> act = async () => await _bookingService.GetBookingByIdAsync(Guid.NewGuid());
+        var eventId = await CreateTestEventAsync(totalSeats: 3);
 
-        await act.Should().ThrowExactlyAsync<NotFoundException>();
+        await _bookingService.CreateBookingAsync(eventId);
+        await _bookingService.CreateBookingAsync(eventId);
+
+        var eventInfo = await _eventService.GetEventByIdAsync(eventId);
+        Assert.Equal(1, eventInfo.AvailableSeats);
     }
 
-    [Fact(DisplayName = "Создание брони уменьшает AvailableSeats на 1")]
-    public async Task CreateBooking_ShouldDecreasesAvailableSeatsByOne()
+    #endregion
+
+    #region GetBookingByIdAsync Tests
+
+    [Fact]
+    public async Task GetBookingByIdAsync_WithValidId_ReturnsCorrectBookingInfo()
     {
-        var newEvent = new Event
-        {
-            Title = "Test Event",
-            Description = "Test Description",
-            StartAt = new DateTime(2025, 1, 1),
-            EndAt = new DateTime(2025, 1, 2),
-            Id = Guid.NewGuid(),
-            TotalSeats = 3,
-        };
+        var eventId = await CreateTestEventAsync();
+        var created = await _bookingService.CreateBookingAsync(eventId);
 
-        _eventService.AddEvent(newEvent);
-        await _bookingService.CreateBookingAsync(newEvent.Id);
-        var expectedEvent = _eventService.GetEvent(newEvent.Id);
+        var result = await _bookingService.GetBookingByIdAsync(created.Id);
 
-        expectedEvent.AvailableSeats.Should().Be(2);
+        Assert.NotNull(result);
+        Assert.Equal(created.Id, result.Id);
+        Assert.Equal(created.EventId, result.EventId);
+        Assert.Equal(BookingStatus.Pending, result.Status);
     }
 
-    [Fact(DisplayName = "Создание нескольких броней (до лимита) — все успешны, у каждой уникальный Id")]
-    public async Task CreateBookingsToLimit_ShouldSuccess()
+    [Fact]
+    public async Task GetBookingByIdAsync_WithNonExistentId_ThrowsNotFoundException()
     {
-        var newEvent = new Event
-        {
-            Title = "Test Event",
-            Description = "Test Description",
-            StartAt = new DateTime(2025, 1, 1),
-            EndAt = new DateTime(2025, 1, 2),
-            Id = Guid.NewGuid(),
-            TotalSeats = 3,
-        };
+        var invalidId = Guid.NewGuid();
 
-        _eventService.AddEvent(newEvent);
-        var firstBooking = await _bookingService.CreateBookingAsync(newEvent.Id);
-        var secondBooking = await _bookingService.CreateBookingAsync(newEvent.Id);
-        var thirdBooking = await _bookingService.CreateBookingAsync(newEvent.Id);
-
-        firstBooking.Id.Should().NotBe(secondBooking.Id).And.NotBe(thirdBooking.Id);
+        var exception = await Assert.ThrowsAsync<NotFoundException>(
+            () => _bookingService.GetBookingByIdAsync(invalidId));
+        Assert.Equal("Booking not found", exception.Message);
     }
 
-    [Fact(DisplayName = "После исчерпания мест следующая попытка выбрасывает NoAvailableSeatsException")]
-    public async Task WhenNoAvailableSeats_ShouldThrowNoAvailableSeatsException()
+    #endregion
+
+    #region Concurrency Tests
+
+    [Fact]
+    public async Task CreateBookingAsync_ConcurrentRequests_DoesNotOverbookEvent()
     {
-        var newEvent = CreateTestEvent(1);
-        _eventService.AddEvent(newEvent);
-        
-        await _bookingService.CreateBookingAsync(newEvent.Id);
+        const int totalSeats = 5;
+        const int concurrentRequests = 20;
+        var eventId = await CreateTestEventAsync(totalSeats: totalSeats);
 
-        Func<Task> act = async () => await _bookingService.CreateBookingAsync(newEvent.Id);
+        var tasks = Enumerable.Range(0, concurrentRequests)
+            .Select(_ => Task.Run(async () =>
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
+                try
+                {
+                    await bookingService.CreateBookingAsync(eventId);
+                    return true;
+                }
+                catch (NoAvailableSeatsException)
+                {
+                    return false;
+                }
+            }));
 
-        await act.Should().ThrowExactlyAsync<NoAvailableSeatsException>();
+        var results = await Task.WhenAll(tasks);
+
+        var successCount = results.Count(r => r);
+        Assert.Equal(totalSeats, successCount);
     }
 
-    [Fact(DisplayName = "После вызова Confirm() бронь возвращает статус Confirmed и заполненный ProcessedAt")]
-    public async Task ConfirmBooking_ShouldSucceed()
+    [Fact]
+    public async Task CreateBookingAsync_ConcurrentRequests_AllSuccessfulBookingsHaveUniqueIds()
     {
-        var newEvent = CreateTestEvent(1);
-        _eventService.AddEvent(newEvent);
-        
-        var booking = await _bookingService.CreateBookingAsync(newEvent.Id);
-        booking.Confirm();
+        const int totalSeats = 10;
+        const int concurrentRequests = 10;
+        var eventId = await CreateTestEventAsync(totalSeats: totalSeats);
+        var bookingIds = new System.Collections.Concurrent.ConcurrentBag<Guid>();
 
-        booking.Status.Should().Be(BookingStatus.Confirmed);
-        booking.ProcessedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        var tasks = Enumerable.Range(0, concurrentRequests)
+            .Select(_ => Task.Run(async () =>
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
+                var booking = await bookingService.CreateBookingAsync(eventId);
+                bookingIds.Add(booking.Id);
+            }));
+
+        await Task.WhenAll(tasks);
+
+        Assert.Equal(totalSeats, bookingIds.Distinct().Count());
     }
 
-    [Fact(DisplayName = "После вызова Reject() бронь возвращает статус Rejected и заполненный ProcessedAt")]
-    public async Task RejectBooking_ShouldSucceed()
-    {
-        var newEvent = CreateTestEvent(1);
-        _eventService.AddEvent(newEvent);
-        
-        var booking = await _bookingService.CreateBookingAsync(newEvent.Id);
-        booking.Reject();
-
-        booking.Status.Should().Be(BookingStatus.Rejected);
-        booking.ProcessedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-    }
-
-    [Fact(DisplayName = "После Reject() и ReleaseSeats() количество свободных мест восстанавливается.")]
-    public async Task AfterRejectAndReleaseSeats_ShouldRestoreFreeSeats()
-    {
-        var newEvent = CreateTestEvent(1);
-        _eventService.AddEvent(newEvent);
-        
-        var booking = await _bookingService.CreateBookingAsync(newEvent.Id);
-        booking.Reject();
-        newEvent.ReleaseSeats();
-
-        newEvent.AvailableSeats.Should().Be(1);
-    }
-
-    [Fact(DisplayName = "После Reject() и ReleaseSeats() можно успешно создать новую бронь на то же место.")]
-    public async Task AfterRejectAndReleaseSeats_ShouldAvailableForBooking()
-    {
-        var newEvent = CreateTestEvent(1);
-        _eventService.AddEvent(newEvent);
-        
-        var rejectedBooking = await _bookingService.CreateBookingAsync(newEvent.Id);
-        rejectedBooking.Reject();
-        newEvent.ReleaseSeats();
-        var newBooking = await _bookingService.CreateBookingAsync(newEvent.Id);
-
-        newBooking.Status.Should().Be(BookingStatus.Pending);
-    }
-
-    [Fact(DisplayName = "Тест на защиту от овербукинга.")]
-    public async Task OverbookingProtectionTest()
-    {
-        var newEvent = CreateTestEvent(5);
-        _eventService.AddEvent(newEvent);
-
-        var tasks = Enumerable.Range(0, 20)
-            .Select(_ => _bookingService.CreateBookingAsync(newEvent.Id))
-            .ToList();
-
-        try
-        {
-            await Task.WhenAll(tasks);
-        }
-        catch
-        {
-            //игнорируем для подсчёта исключений
-        }
-
-        int successfulTasks = tasks.Count(t => t.Status == TaskStatus.RanToCompletion);
-        int failedTasks =
-            tasks.Count(t => t is { Exception.InnerException: NoAvailableSeatsException });
-
-        newEvent.AvailableSeats.Should().Be(0);
-        successfulTasks.Should().Be(5);
-        failedTasks.Should().Be(15);
-    }
-
-    [Fact(DisplayName = "Тест на уникальность Id при конкурентных запросах")]
-    public async Task TestForUniqueIdWithConcurrentQueries()
-    {
-        var newEvent = CreateTestEvent(10);
-        _eventService.AddEvent(newEvent);
-
-        var tasks = Enumerable.Range(0, 10)
-            .Select(_ => _bookingService.CreateBookingAsync(newEvent.Id))
-            .ToList();
-
-        var result = await Task.WhenAll(tasks);
-        var ids = result.Select(t => t.Id).ToList();
-
-        ids.Should().OnlyHaveUniqueItems();
-    }
-
-    private static Event CreateTestEvent(int totalSeats)
-    {
-        return new Event
-        {
-            Title = "Test Event",
-            Description = "Test Description",
-            StartAt = new DateTime(2025, 1, 1),
-            EndAt = new DateTime(2025, 1, 2),
-            Id = Guid.NewGuid(),
-            TotalSeats = totalSeats,
-        };
-    }
+    #endregion
 }

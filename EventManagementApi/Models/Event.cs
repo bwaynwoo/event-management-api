@@ -1,29 +1,119 @@
+using ValidationException = EventManagementApi.Exceptions.ValidationException;
+
 namespace EventManagementApi.Models;
 
-public class Event
+internal sealed class Event
 {
-    public Guid Id { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public DateTime StartAt { get; set; }
-    public DateTime EndAt { get; set; }
-    public int TotalSeats { get; set; }
+    internal Guid Id { get; private set; }
+    internal string Title { get; private set; }
+    internal string? Description { get; private set; }
+    internal DateTime StartAt { get; private set; }
+    internal DateTime EndAt { get; private set; }
+    internal int TotalSeats { get; private set; }
+    internal int AvailableSeats { get; private set; }
+    internal ICollection<Booking> Bookings { get; private set; } = [];
 
-    public int AvailableSeats { get; set; }
-
-    public bool TryReserveSeats(int count = 1)
+    private Event()
     {
-        if (AvailableSeats - count < 0)
-        {
-            return false;
-        }
+        Title = null!;
+    }
 
-        AvailableSeats = AvailableSeats - count;
+    private Event(
+        Guid id,
+        string title,
+        DateTime startAt,
+        DateTime endAt,
+        int totalSeats,
+        string? description = null,
+        string? location = null)
+    {
+        Id = id;
+        Title = title;
+        StartAt = startAt;
+        EndAt = endAt;
+        TotalSeats = totalSeats;
+        AvailableSeats = totalSeats;
+        Description = description;
+    }
+
+    internal static Event Create(
+        string? title,
+        DateTime? startAt,
+        DateTime? endAt,
+        int? totalSeats = null,
+        string? description = null,
+        string? location = null)
+    {
+        ThrowIfNotValid(title, startAt, endAt, totalSeats);
+
+        return new Event(Guid.NewGuid(), title!.Trim(), startAt!.Value, endAt!.Value, totalSeats!.Value, description,
+            location);
+    }
+
+    internal void Update(
+        string? title,
+        DateTime? startAt,
+        DateTime? endAt,
+        string? description = null,
+        string? location = null)
+    {
+        ThrowIfNotValid(title, startAt, endAt, TotalSeats);
+
+        Title = title!;
+        StartAt = startAt!.Value;
+        EndAt = endAt!.Value;
+        Description = description;
+    }
+
+    internal bool TryReserveSeats(int count = 1)
+    {
+        if (AvailableSeats < count)
+            return false;
+
+        AvailableSeats -= count;
         return true;
     }
 
-    public void ReleaseSeats(int count = 1)
+    internal void ReleaseSeats(int count = 1)
     {
-        AvailableSeats = AvailableSeats + count;
+        AvailableSeats = Math.Min(TotalSeats, AvailableSeats + count);
+    }
+
+    private static void ThrowIfNotValid(
+        string? title,
+        DateTime? startAt,
+        DateTime? endAt,
+        int? totalSeats)
+    {
+        var errors = new Dictionary<string, ICollection<string>>();
+
+        if (string.IsNullOrWhiteSpace(title))
+            AddError(errors, nameof(Title), "Title cannot be empty");
+
+        if (!startAt.HasValue)
+            AddError(errors, nameof(StartAt), "Start time cannot be null");
+
+        if (!endAt.HasValue)
+            AddError(errors, nameof(EndAt), "End time cannot be null");
+
+        if (startAt < DateTime.UtcNow)
+            AddError(errors, nameof(StartAt), "Event cannot start in the past");
+
+        if (endAt <= startAt)
+            AddError(errors, nameof(EndAt), "End time must be after start time");
+
+        if (!totalSeats.HasValue || totalSeats.Value <= 0)
+            AddError(errors, nameof(TotalSeats), "TotalSeats must be greater than zero");
+
+        if (errors.Any())
+            throw new ValidationException(errors);
+    }
+
+    private static void AddError(Dictionary<string, ICollection<string>> errors, string field, string message)
+    {
+        if (!errors.ContainsKey(field))
+            errors[field] = new List<string>();
+
+        errors[field].Add(message);
     }
 }

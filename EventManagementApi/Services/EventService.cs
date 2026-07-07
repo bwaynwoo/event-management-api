@@ -1,86 +1,102 @@
-using System.Collections.Concurrent;
+using EventApi.Dto;
+using EventManagementApi.DataAccess;
 using EventManagementApi.DTOs;
 using EventManagementApi.Exceptions;
 using EventManagementApi.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace EventManagementApi.Services;
 
-public class EventService : IEventService
+internal sealed class EventService : IEventService
 {
-    private static readonly ConcurrentDictionary<Guid, Event> Events = new();
+    private readonly AppDbContext _context;
 
-    public PaginatedResult<Event> GetEvents(GetEventsRequestDto dto)
+    public EventService(AppDbContext context)
     {
-        var events = Events.Values.AsEnumerable();
-
-        if (!string.IsNullOrWhiteSpace(dto.Title))
-        {
-            events = events.Where(e =>
-                e.Title.Contains(dto.Title, StringComparison.OrdinalIgnoreCase));
-        }
-
-        if (dto.From.HasValue)
-        {
-            events = events.Where(e => e.StartAt >= dto.From.Value);
-        }
-
-        if (dto.To.HasValue)
-        {
-            events = events.Where(e => e.EndAt <= dto.To.Value);
-        }
-
-        var eventsList = events.ToList();
-
-        var totalCount = eventsList.Count;
-
-        var items = eventsList
-            .OrderBy(e => e.Id)
-            .Skip((dto.Page - 1) * dto.PageSize)
-            .Take(dto.PageSize)
-            .ToList()
-            .AsReadOnly();
-
-        return new PaginatedResult<Event>(dto.Page, dto.PageSize, totalCount, items);
+        _context = context;
     }
 
-    public Event GetEvent(Guid id)
+    public async Task<EventInfo> CreateEventAsync(CreateEvent request, CancellationToken cancellationToken = default)
     {
-        if (!Events.TryGetValue(id, out var eventItem))
+        var @event = Event.Create(request.Title, request.StartAt, request.EndAt, request.TotalSeats, request.Description);
+        await _context.Events.AddAsync(@event, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+        return ToInfo(@event);
+    }
+
+    public async Task<EventInfo> GetEventByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var @event = await _context.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken)
+            ?? throw new NotFoundException("Event not found");
+
+        return ToInfo(@event);
+    }
+
+    public async Task<PaginatedResult<EventInfo>> GetAllEventsAsync(
+        int page = 1,
+        int pageSize = 10,
+        DateTime? from = null,
+        DateTime? to = null,
+        string? title = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Events.AsQueryable();
+
+        if (from.HasValue)
+            query = query.Where(e => e.StartAt >= from.Value);
+
+        if (to.HasValue)
+            query = query.Where(e => e.StartAt <= to.Value);
+
+        if (!string.IsNullOrWhiteSpace(title))
+            query = query.Where(e => e.Title.ToLower().Contains(title.ToLower()));
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PaginatedResult<EventInfo>
         {
-            throw new NotFoundException("Event", id);
-        }
-
-        return eventItem;
+            Items = items.Select(ToInfo).ToArray(),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 
-    public void AddEvent(Event eventItem)
+    public async Task<EventInfo> UpdateEventAsync(Guid id, UpdateEvent request, CancellationToken cancellationToken = default)
     {
-        eventItem.Id = Guid.NewGuid();
-        eventItem.AvailableSeats = eventItem.TotalSeats;
-        Events.TryAdd(eventItem.Id, eventItem);
+        var @event = await _context.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken)
+            ?? throw new NotFoundException("Event not found");
+
+        @event.Update(request.Title, request.StartAt, request.EndAt, request.Description);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return ToInfo(@event);
     }
 
-    public void UpdateEvent(Guid id, Event eventItem)
+    public async Task<bool> DeleteEventAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        if (!Events.TryGetValue(id, out var oldEvent))
-        {
-            throw new NotFoundException("Event", id);
-        }
+        var @event = await _context.Events.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+        if (@event == null)
+            return false;
 
-        eventItem.Id = id;
-        Events.TryUpdate(id, eventItem, oldEvent);
+        _context.Events.Remove(@event);
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
-    public void RemoveEvent(Guid id)
+    internal static EventInfo ToInfo(Event @event) => new()
     {
-        if (!Events.TryRemove(id, out _))
-        {
-            throw new NotFoundException("Event", id);
-        }
-    }
-    
-    public void Clear()
-    {
-        Events.Clear();
-    }
+        Id = @event.Id,
+        Title = @event.Title,
+        StartAt = @event.StartAt,
+        EndAt = @event.EndAt,
+        TotalSeats = @event.TotalSeats,
+        AvailableSeats = @event.AvailableSeats,
+        Description = @event.Description
+    };
 }
