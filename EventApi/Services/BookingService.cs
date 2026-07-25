@@ -1,8 +1,7 @@
-using EventApi.DataAccess;
 using EventApi.DTOs;
 using EventApi.Exceptions;
 using EventApi.Models;
-using Microsoft.EntityFrameworkCore;
+using EventApi.Repositories;
 
 namespace EventApi.Services;
 
@@ -10,11 +9,13 @@ internal sealed class BookingService : IBookingService
 {
     private static readonly SemaphoreSlim BookingLock = new(1, 1);
 
-    private readonly AppDbContext _context;
+    private readonly IBookingRepository _bookingRepository;
+    private readonly IEventRepository _eventRepository;
 
-    public BookingService(AppDbContext context)
+    public BookingService(IBookingRepository bookingRepository, IEventRepository eventRepository)
     {
-        _context = context;
+        _bookingRepository = bookingRepository;
+        _eventRepository = eventRepository;
     }
 
     public async Task<BookingInfo> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default)
@@ -22,15 +23,14 @@ internal sealed class BookingService : IBookingService
         await BookingLock.WaitAsync(cancellationToken);
         try
         {
-            var @event = await _context.Events.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken)
-                         ?? throw new NotFoundException("Event not found");
+            var @event = await _eventRepository.GetByIdAsync(eventId, cancellationToken);
 
             if (!@event.TryReserveSeats())
                 throw new NoAvailableSeatsException("No available seats for this event");
 
             var booking = Booking.CreatePending(eventId);
-            await _context.Bookings.AddAsync(booking, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _bookingRepository.AddAsync(booking, cancellationToken);
+            await _bookingRepository.SaveChangesAsync(cancellationToken);
 
             return ToInfo(booking);
         }
@@ -42,8 +42,7 @@ internal sealed class BookingService : IBookingService
 
     public async Task<BookingInfo> GetBookingByIdAsync(Guid bookingId, CancellationToken cancellationToken = default)
     {
-        var booking = await _context.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, cancellationToken)
-                      ?? throw new NotFoundException("Booking not found");
+        var booking = await _bookingRepository.GetByIdAsync(bookingId, cancellationToken);
 
         return ToInfo(booking);
     }
