@@ -1,5 +1,6 @@
 using EventApi.DataAccess;
 using EventApi.Enums;
+using EventApi.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventApi.Services;
@@ -61,17 +62,18 @@ internal sealed class BookingBackgroundService : BackgroundService
             await Task.Delay(ProcessingDelay, stoppingToken);
 
             using var scope = _scopeFactory.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-            var booking = await context.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, stoppingToken);
+            var contextBooking = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
+            var contextEvent = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+            
+            var booking = await contextBooking.GetByIdAsync(bookingId, stoppingToken);
             if (booking == null || booking.Status != BookingStatus.Pending)
                 return;
 
-            var @event = await context.Events.FirstOrDefaultAsync(e => e.Id == booking.EventId, stoppingToken);
+            var @event = await contextEvent.GetByIdAsync(booking.EventId, stoppingToken);
             if (@event == null)
             {
                 booking.Reject();
-                await context.SaveChangesAsync(stoppingToken);
+                await contextEvent.SaveChangesAsync(stoppingToken);
 
                 _logger.LogWarning(
                     "Booking {BookingId} rejected: event {EventId} not found",
@@ -81,7 +83,7 @@ internal sealed class BookingBackgroundService : BackgroundService
             }
 
             booking.Confirm();
-            await context.SaveChangesAsync(stoppingToken);
+            await contextEvent.SaveChangesAsync(stoppingToken);
 
             _logger.LogInformation(
                 "Booking {BookingId} for event {EventId} processed → {Status}",
@@ -95,18 +97,19 @@ internal sealed class BookingBackgroundService : BackgroundService
             try
             {
                 using var scope = _scopeFactory.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var contextBooking = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
+                var contextEvent = scope.ServiceProvider.GetRequiredService<IEventRepository>();
 
-                var booking = await context.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, stoppingToken);
+                var booking = await contextBooking.GetByIdAsync(bookingId, stoppingToken);
                 if (booking != null)
                 {
                     booking.Reject();
 
-                    var @event = await context.Events.FirstOrDefaultAsync(e => e.Id == booking.EventId, stoppingToken);
+                    var @event = await contextEvent.GetByIdAsync(booking.EventId, stoppingToken);
                     if (@event != null)
                         @event.ReleaseSeats();
 
-                    await context.SaveChangesAsync(stoppingToken);
+                    await contextEvent.SaveChangesAsync(stoppingToken);
                 }
 
                 _logger.LogError(ex,
