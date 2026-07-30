@@ -2,7 +2,7 @@ using ValidationException = EventApi.Exceptions.ValidationException;
 
 namespace EventApi.Models;
 
-internal sealed class Event
+public sealed class Event
 {
     internal Guid Id { get; private set; }
     internal string Title { get; private set; }

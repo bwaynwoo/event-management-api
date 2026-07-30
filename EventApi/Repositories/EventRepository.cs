@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EventApi.Repositories;
 
-internal class EventRepository : IEventRepository
+public class EventRepository : IEventRepository
 {
     private readonly AppDbContext _db;
 
-    internal EventRepository(AppDbContext db)
+    public EventRepository(AppDbContext db)
     {
         _db = db;
     }

@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EventApi.Repositories;
 
-internal class BookingRepository : IBookingRepository
+public class BookingRepository : IBookingRepository
 {
     private readonly AppDbContext _db;
 
-    internal BookingRepository (AppDbContext db)
+    public BookingRepository (AppDbContext db)
     {
         _db = db;
     }

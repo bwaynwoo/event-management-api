@@ -3,7 +3,7 @@ using EventApi.Exceptions;
 
 namespace EventApi.Models;
 
-internal sealed class Booking
+public sealed class Booking
 {
     internal Guid Id { get; private set; }
     internal Guid EventId { get; private set; }
