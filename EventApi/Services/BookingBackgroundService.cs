@@ -1,7 +1,5 @@
-using EventApi.DataAccess;
 using EventApi.Enums;
 using EventApi.Repositories;
-using Microsoft.EntityFrameworkCore;
 
 namespace EventApi.Services;
 
@@ -27,15 +25,12 @@ internal sealed class BookingBackgroundService : BackgroundService
         {
             try
             {
-                List<Guid> pendingBookingIds;
+                IReadOnlyList<Guid> pendingBookingIds;
 
                 using (var scope = _scopeFactory.CreateScope())
                 {
-                    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                    pendingBookingIds = await context.Bookings
-                        .Where(b => b.Status == BookingStatus.Pending)
-                        .Select(b => b.Id)
-                        .ToListAsync(stoppingToken);
+                    var bookingRepository = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
+                    pendingBookingIds = await bookingRepository.GetPendingBookingIds(stoppingToken);
                 }
 
                 var tasks = pendingBookingIds.Select(id =>

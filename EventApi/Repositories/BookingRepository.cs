@@ -1,4 +1,5 @@
 using EventApi.DataAccess;
+using EventApi.Enums;
 using EventApi.Exceptions;
 using EventApi.Models;
 using Microsoft.EntityFrameworkCore;
@@ -28,5 +29,13 @@ internal class BookingRepository : IBookingRepository
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Guid>> GetPendingBookingIds(CancellationToken cancellationToken)
+    {
+        return await _db.Bookings
+            .Where(b => b.Status == BookingStatus.Pending)
+            .Select(b => b.Id)
+            .ToListAsync(cancellationToken);
     }
 }
