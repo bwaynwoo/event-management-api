@@ -24,10 +24,6 @@ public class BookingRepository : IBookingRepository
     public async Task AddAsync(Booking booking, CancellationToken cancellationToken)
     {
         await _db.Bookings.AddAsync(booking, cancellationToken);
-    }
-
-    public async Task SaveChangesAsync(CancellationToken cancellationToken)
-    {
         await _db.SaveChangesAsync(cancellationToken);
     }
 

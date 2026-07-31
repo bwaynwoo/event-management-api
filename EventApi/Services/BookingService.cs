@@ -30,7 +30,6 @@ internal sealed class BookingService : IBookingService
 
             var booking = Booking.CreatePending(eventId);
             await _bookingRepository.AddAsync(booking, cancellationToken);
-            await _bookingRepository.SaveChangesAsync(cancellationToken);
 
             return ToInfo(booking);
         }
