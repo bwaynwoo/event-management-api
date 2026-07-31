@@ -1,6 +1,7 @@
 ﻿using EventApi.DataAccess;
 using EventApi.DTOs;
 using EventApi.Exceptions;
+using EventApi.Repositories;
 using EventApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,7 @@ public sealed class EventServiceTests : IDisposable
         var services = new ServiceCollection();
         services.AddDbContext<AppDbContext>(options =>
             options.UseInMemoryDatabase(dbName));
+        services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<IEventService, EventService>();
 
         _serviceProvider = services.BuildServiceProvider();
@@ -755,13 +757,13 @@ public sealed class EventServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task DeleteEventAsync_WithInvalidId_ReturnsFalse()
+    public async Task DeleteEventAsync_WithInvalidId_ThrowsNotFoundException()
     {
         var invalidId = Guid.NewGuid();
-
-        var result = await _eventService.DeleteEventAsync(invalidId);
-
-        Assert.False(result);
+    
+        await Assert.ThrowsAsync<NotFoundException>(
+            () => _eventService.DeleteEventAsync(invalidId)
+        );
     }
 
     [Fact]

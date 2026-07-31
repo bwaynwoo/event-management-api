@@ -2,7 +2,7 @@ using EventApi.Models;
 
 namespace EventApi.Repositories;
 
-internal interface IEventRepository
+public interface IEventRepository
 {
     Task<Event> GetByIdAsync(Guid eventId, CancellationToken cancellationToken);
     Task AddAsync(Event @event, CancellationToken cancellationToken);
