@@ -9,5 +9,7 @@
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=5ba10b75_002D59f2_002D4cdc_002Db27d_002D940ee2b8327b/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="BookingRepositoryTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::77C1CCF0-87C1-E6E2-1D55-C345C8A6F890::net10.0::EventApi.IntegrationTests.BookingRepositoryTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::77C1CCF0-87C1-E6E2-1D55-C345C8A6F890::net10.0::EventApi.IntegrationTests.EventRepositoryTests.GetByIdAsync_ExistingEvent_ReturnsEvent&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::77C1CCF0-87C1-E6E2-1D55-C345C8A6F890::net10.0::EventApi.IntegrationTests.EventRepositoryTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
