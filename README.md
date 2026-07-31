@@ -10,7 +10,7 @@ REST API для управления мероприятиями.
 
 ## Требования
 
-- [.NET 10](https://dotnet.microsoft.com/download) или выше
+- [.NET 10](https://dotnet.microsoft.com/download)
 - PostgreSQL
 
 ## Настройка строки подключения
@@ -33,9 +33,7 @@ REST API для управления мероприятиями.
 
 Важно: Не добавляйте appsettings.json с реальными паролями в систему контроля версий. Для локальной разработки используйте appsettings.Development.json или User Secrets
 
-Схема БД создаётся автоматически при запуске через EnsureCreated.
-
-В тестах используется InMemory-провайдер.
+Схема БД управляется миграциями EF Core;.
 
 ## Установка и запуск
 
@@ -50,10 +48,10 @@ git clone https://github.com/bwaynwoo/event-management-api.git
 cd event-management-api
 ```
 
-* Переключиться на ветку sprint-5
+* Переключиться на ветку sprint-6
 
 ```bash
-git switch sprint-5
+git switch sprint-6
 ```
 
 * Собрать решение
@@ -86,11 +84,17 @@ http://localhost:5000/swagger/index.html
 | POST    |/events/{id}/book |Cоздание брони по указанному id события|
 | GET     |/bookings/{id} | Получение брони по id |
 
-### Особенности реализации
-* Данные хранятся в памяти приложения (ConcurrentDictionary<T>)
-* При перезапуске сервера все данные сбрасываются
-* ID генерируется автоматически
-* Swagger доступен в режиме разработки
+### Команды для создания и применения миграций
+* Создание миграций
+```bash
+  dotnet ef migrations add InitialCreate
+```
+InitialCreate - название миграции
+
+* Применение миграций
+```bash
+ dotnet ef database update
+```
 
 ### Пример запроса для создания мероприятия
 ```json
@@ -201,3 +205,18 @@ dotnet test
 4. Без синхронизации несколько потоков могут прочитать, что места ещё есть, и попытаться забронировать, превысив лимит.
 5. SemaphoreSlim гарантирует, что только 5 запросов завершатся успешно, а 15 получат отказ.
 6. Ожидаемый результат: успешных бронирований — ровно 5, остальные 15 завершаются с исключением о нехватке мест.
+
+### Интеграционные тесты
+Для запуска интеграционных тестов необходим Docker. Тесты используют Testcontainers для автоматического создания 
+и управления временными контейнерами PostgreSQL.
+* Запуск тестов
+```bash
+# Запуск всех тестов
+dotnet test
+
+# Только интеграционные тесты
+dotnet test --filter "FullyQualifiedName~IntegrationTests"
+
+# Запуск конкретного теста
+dotnet test --filter "GetByIdAsync_ReturnsBooking"
+```
