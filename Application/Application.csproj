@@ -10,4 +10,15 @@
         <ProjectReference Include="..\Domain\Domain.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(EfCoreVersion)"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="$(EfCoreVersion)"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="$(EfCoreVersion)"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="EventApi.Tests"/>
+        <InternalsVisibleTo Include="EventApi.IntegrationTests"/>
+    </ItemGroup>
+
 </Project>

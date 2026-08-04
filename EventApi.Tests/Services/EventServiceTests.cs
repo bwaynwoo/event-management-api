@@ -1,8 +1,9 @@
-﻿using EventApi.DataAccess;
-using EventApi.DTOs;
-using EventApi.Exceptions;
-using EventApi.Repositories;
-using EventApi.Services;
+﻿using Application.DTOs;
+using Application.Repositories;
+using Application.Services;
+using Domain.Exceptions;
+using Infrastructure.DataAccess;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 

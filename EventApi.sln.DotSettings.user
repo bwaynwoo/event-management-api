@@ -11,4 +11,7 @@
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ba50a73b_002D7506_002D4172_002Da516_002D4cc7d9f9eb43/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="DeleteEventAsync_WithInvalidId_ReturnsFalse" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;Solution /&gt;
-&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
+&lt;/SessionState&gt;</s:String>
+	
+	
+	</wpf:ResourceDictionary>

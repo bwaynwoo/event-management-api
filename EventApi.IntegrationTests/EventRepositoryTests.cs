@@ -1,7 +1,7 @@
-using EventApi.DataAccess;
-using EventApi.Exceptions;
-using EventApi.Models;
-using EventApi.Repositories;
+using Domain.Exceptions;
+using Domain.Models;
+using Infrastructure.DataAccess;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Xunit;

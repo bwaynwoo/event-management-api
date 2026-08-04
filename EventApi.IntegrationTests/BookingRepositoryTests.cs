@@ -1,7 +1,7 @@
-using EventApi.DataAccess;
-using EventApi.Enums;
-using EventApi.Models;
-using EventApi.Repositories;
+using Domain.Enums;
+using Domain.Models;
+using Infrastructure.DataAccess;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Xunit;

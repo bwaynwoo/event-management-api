@@ -1,6 +1,6 @@
-using EventApi.DTOs;
-using EventApi.Services;
+using Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Application.Services;
 
 namespace EventApi.Endpoints;
 

@@ -1,0 +1,44 @@
+using Domain.Enums;
+using Domain.Exceptions;
+
+namespace Domain.Models;
+
+public sealed class Booking
+{
+    public Guid Id { get; private set; }
+    public Guid EventId { get; private set; }
+    public BookingStatus Status { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime? ProcessedAt { get; private set; }
+    public Event? Event { get; private set; }
+
+    private Booking() { }
+
+    private Booking(Guid id, Guid eventId, BookingStatus status, DateTime createdAt)
+    {
+        Id = id;
+        EventId = eventId;
+        Status = status;
+        CreatedAt = createdAt;
+    }
+
+    public static Booking CreatePending(Guid eventId)
+    {
+        if (eventId == Guid.Empty)
+            throw new ValidationException(nameof(EventId), "EventId cannot be empty");
+
+        return new Booking(Guid.NewGuid(), eventId, BookingStatus.Pending, DateTime.UtcNow);
+    }
+
+    public void Confirm()
+    {
+        Status = BookingStatus.Confirmed;
+        ProcessedAt = DateTime.UtcNow;
+    }
+
+    public void Reject()
+    {
+        Status = BookingStatus.Rejected;
+        ProcessedAt = DateTime.UtcNow;
+    }
+}

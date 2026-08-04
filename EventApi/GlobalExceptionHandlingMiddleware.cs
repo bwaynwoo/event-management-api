@@ -1,6 +1,6 @@
-using EventApi.Exceptions;
+using Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
+using ProblemDetails = Domain.Exceptions.ProblemDetails;
 
 namespace EventApi;
 
@@ -29,11 +29,14 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
         };
 
         ProblemDetails problemDetails = exception is ValidationException validationEx
-            ? new ValidationProblemDetails(validationEx.Errors.ToDictionary(k => k.Key, v => v.Value.ToArray()))
+            ? new ValidationProblemDetails()
             {
                 Status = statusCode,
                 Title = title,
-                Detail = exception.Message
+                Detail = exception.Message,
+                Errors = validationEx.Errors.ToDictionary(
+                    k => k.Key,
+                    v => v.Value.ToArray())
             }
             : new ProblemDetails
             {

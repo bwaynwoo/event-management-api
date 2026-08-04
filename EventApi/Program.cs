@@ -1,24 +1,20 @@
+using Application;
+using Application.Repositories;
 using EventApi;
-using EventApi.DataAccess;
 using EventApi.Endpoints;
-using EventApi.Repositories;
-using EventApi.Services;
+using Infrastructure;
+using Infrastructure.DataAccess;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddInfrastructure(
+    builder.Configuration.GetConnectionString("DefaultConnection")!);
 
-builder.Services.AddScoped<IEventRepository, EventRepository>();
-builder.Services.AddScoped<IBookingRepository, BookingRepository>();
-
-builder.Services.AddScoped<IEventService, EventService>();
-builder.Services.AddScoped<IBookingService, BookingService>();
-
-builder.Services.AddHostedService<BookingBackgroundService>();
+builder.Services.AddApplication();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
