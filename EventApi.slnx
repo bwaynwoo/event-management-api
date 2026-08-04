@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="EventApi.IntegrationTests/EventApi.IntegrationTests.csproj" />
+  <Project Path="EventApi.Tests\EventApi.Tests.csproj" />
+  <Project Path="EventApi\EventApi.csproj" />
+</Solution>
