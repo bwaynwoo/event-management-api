@@ -17,8 +17,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <InternalsVisibleTo Include="EventApi.Tests"/>
-        <InternalsVisibleTo Include="EventApi.IntegrationTests"/>
+        <InternalsVisibleTo Include="Tests"/>
+        <InternalsVisibleTo Include="IntegrationTests"/>
     </ItemGroup>
 
 </Project>

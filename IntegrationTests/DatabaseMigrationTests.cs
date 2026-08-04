@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Xunit;
 
-namespace EventApi.IntegrationTests;
+namespace IntegrationTests;
 
 public class DatabaseMigrationTests : IAsyncLifetime
 {

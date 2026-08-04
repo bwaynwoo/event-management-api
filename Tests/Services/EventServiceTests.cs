@@ -7,7 +7,7 @@ using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EventApi.Tests.Services;
+namespace Tests.Services;
 
 public sealed class EventServiceTests : IDisposable
 {
