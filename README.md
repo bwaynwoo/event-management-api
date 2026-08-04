@@ -48,10 +48,10 @@ git clone https://github.com/bwaynwoo/event-management-api.git
 cd event-management-api
 ```
 
-* Переключиться на ветку sprint-6
+* Переключиться на ветку sprint-7
 
 ```bash
-git switch sprint-6
+git switch sprint-7
 ```
 
 * Собрать решение
@@ -220,3 +220,40 @@ dotnet test --filter "FullyQualifiedName~IntegrationTests"
 # Запуск конкретного теста
 dotnet test --filter "GetByIdAsync_ReturnsBooking"
 ```
+
+## 🏗️ Clean Architecture
+
+Проект построен по принципам чистой архитектуры. Разделение на отдельные сборки гарантирует соблюдение направления зависимостей:
+внешние слои зависят от внутренних, но не наоборот.
+
+### Назначение слоёв
+
+#### 🟣 Domain (Class Library)
+Самый внутренний слой. Содержит бизнес-правила и не зависит ни от чего внешнего.
+
+- **Entities** — доменные сущности (`Event`, `Booking`)
+- **Value Objects** — объекты-значения
+- **Domain Exceptions** — доменные исключения (`NotFoundException`, `ValidationException`)
+
+#### 🟢 Application (Class Library)
+Слой use cases и бизнес-логики приложения. Зависит **только от Domain**.
+
+- **Services** — сервисы приложения (`EventService`, `BookingService`)
+- **Interfaces** — интерфейсы портов (`IEventRepository`, `IBookingRepository`)
+- **DTOs** — объекты передачи данных (`CreateEvent`, `BookingInfo`)
+- **Background Services** — фоновые задачи (`BookingBackgroundService`)
+
+#### 🔴 Infrastructure (Class Library)
+Реализует доступ к данным и взаимодействие с внешними системами. Зависит от **Domain и Application**.
+
+- **DataAccess** — `AppDbContext`, миграции EF Core
+- **Repositories** — реализации репозиториев (`EventRepository`, `BookingRepository`)
+- **Configurations** — конфигурации сущностей (`IEntityTypeConfiguration`)
+
+#### 🔵 Presentation (Web API)
+Точка входа в приложение. Зависит от **всех слоёв**.
+
+- **Endpoints** — Minimal API эндпоинты
+- **Exception Handling** — обработчики исключений (`GlobalExceptionHandler`)
+- **DI Registration** — регистрация зависимостей
+
