@@ -1,11 +1,9 @@
 using Application;
-using Application.Repositories;
-using EventApi;
-using EventApi.Endpoints;
 using Infrastructure;
 using Infrastructure.DataAccess;
-using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Presentation;
+using Presentation.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 

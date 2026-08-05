@@ -16,6 +16,7 @@ public sealed class BookingServiceTests : IDisposable
     private readonly IServiceScope _scope;
     private readonly IEventService _eventService;
     private readonly IBookingService _bookingService;
+    private readonly SemaphoreSlim _bookingLock = new SemaphoreSlim(1, 1);
 
     public BookingServiceTests()
     {
@@ -24,6 +25,7 @@ public sealed class BookingServiceTests : IDisposable
         services.AddDbContext<AppDbContext>(options =>
             options.UseInMemoryDatabase(dbName));
         
+        services.AddSingleton(_bookingLock);
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<IEventService, EventService>();

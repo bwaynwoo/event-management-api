@@ -35,4 +35,9 @@ public class BookingRepository : IBookingRepository
             .Select(b => b.Id)
             .ToListAsync(cancellationToken);
     }
+    
+    public async Task SaveChangesAsync(CancellationToken cancellationToken)
+    {
+        await _db.SaveChangesAsync(cancellationToken);
+    }
 }

@@ -2,7 +2,7 @@ using Application.DTOs;
 using Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace EventApi.Endpoints;
+namespace Presentation.Endpoints;
 
 internal static class EventEndpoints
 {

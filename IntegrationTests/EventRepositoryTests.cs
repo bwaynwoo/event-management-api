@@ -100,7 +100,6 @@ public class EventRepositoryTests : IAsyncLifetime
 
         var repository = new EventRepository(context);
         await repository.AddAsync(@event, CancellationToken.None);
-        await context.SaveChangesAsync();
 
         await using var assertContext = CreateContext();
         var savedEvent = await assertContext.Events.FirstOrDefaultAsync(e => e.Id == @event.Id);
@@ -124,7 +123,6 @@ public class EventRepositoryTests : IAsyncLifetime
         var repository = new EventRepository(context);
         await repository.AddAsync(event1, CancellationToken.None);
         await repository.AddAsync(event2, CancellationToken.None);
-        await context.SaveChangesAsync();
 
         var allEvents = await context.Events.ToListAsync();
         Assert.Equal(2, allEvents.Count);
@@ -143,8 +141,6 @@ public class EventRepositoryTests : IAsyncLifetime
 
         var repository = new EventRepository(context);
         await repository.AddAsync(@event, CancellationToken.None);
-
-        await repository.SaveChangesAsync(CancellationToken.None);
 
         await using var assertContext = CreateContext();
         var savedEvent = await assertContext.Events.FirstOrDefaultAsync(e => e.Id == @event.Id);
@@ -181,8 +177,6 @@ public class EventRepositoryTests : IAsyncLifetime
         var repository = new EventRepository(context);
         await repository.AddAsync(event1, CancellationToken.None);
         await repository.AddAsync(event2, CancellationToken.None);
-
-        await repository.SaveChangesAsync(CancellationToken.None);
 
         var allEvents = await context.Events.ToListAsync();
         Assert.Equal(2, allEvents.Count);

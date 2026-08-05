@@ -2,7 +2,7 @@ using Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using ProblemDetails = Domain.Exceptions.ProblemDetails;
 
-namespace EventApi;
+namespace Presentation;
 
 internal sealed class GlobalExceptionHandler : IExceptionHandler
 {

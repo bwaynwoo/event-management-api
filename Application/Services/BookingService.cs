@@ -7,20 +7,21 @@ namespace Application.Services;
 
 internal sealed class BookingService : IBookingService
 {
-    private static readonly SemaphoreSlim BookingLock = new(1, 1);
-
     private readonly IBookingRepository _bookingRepository;
     private readonly IEventRepository _eventRepository;
+    private readonly SemaphoreSlim _bookingLock;
 
-    public BookingService(IBookingRepository bookingRepository, IEventRepository eventRepository)
+    public BookingService(IBookingRepository bookingRepository, IEventRepository eventRepository,
+        SemaphoreSlim bookingLock)
     {
         _bookingRepository = bookingRepository;
         _eventRepository = eventRepository;
+        _bookingLock = bookingLock;
     }
 
     public async Task<BookingInfo> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default)
     {
-        await BookingLock.WaitAsync(cancellationToken);
+        await _bookingLock.WaitAsync(cancellationToken);
         try
         {
             var @event = await _eventRepository.GetByIdAsync(eventId, cancellationToken);
@@ -35,7 +36,7 @@ internal sealed class BookingService : IBookingService
         }
         finally
         {
-            BookingLock.Release();
+            _bookingLock.Release();
         }
     }
 

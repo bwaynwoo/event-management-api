@@ -17,7 +17,6 @@ internal sealed class EventService : IEventService
     {
         var @event = Event.Create(request.Title, request.StartAt, request.EndAt, request.TotalSeats, request.Description);
         await _eventRepository.AddAsync(@event, cancellationToken);
-        await _eventRepository.SaveChangesAsync(cancellationToken);
         return ToInfo(@event);
     }
 

@@ -71,7 +71,7 @@ internal sealed class BookingBackgroundService : BackgroundService
             if (@event == null)
             {
                 booking.Reject();
-                await contextEvent.SaveChangesAsync(stoppingToken);
+                await contextBooking.SaveChangesAsync(stoppingToken);
 
                 _logger.LogWarning(
                     "Booking {BookingId} rejected: event {EventId} not found",
@@ -81,7 +81,7 @@ internal sealed class BookingBackgroundService : BackgroundService
             }
 
             booking.Confirm();
-            await contextEvent.SaveChangesAsync(stoppingToken);
+            await contextBooking.SaveChangesAsync(stoppingToken);
 
             _logger.LogInformation(
                 "Booking {BookingId} for event {EventId} processed → {Status}",
@@ -107,7 +107,7 @@ internal sealed class BookingBackgroundService : BackgroundService
                     if (@event != null)
                         @event.ReleaseSeats();
 
-                    await contextEvent.SaveChangesAsync(stoppingToken);
+                    await contextBooking.SaveChangesAsync(stoppingToken);
                 }
 
                 _logger.LogError(ex,

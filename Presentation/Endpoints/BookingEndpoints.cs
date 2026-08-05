@@ -1,8 +1,8 @@
 using Application.DTOs;
-using Microsoft.AspNetCore.Mvc;
 using Application.Services;
+using Microsoft.AspNetCore.Mvc;
 
-namespace EventApi.Endpoints;
+namespace Presentation.Endpoints;
 
 internal static class BookingEndpoints
 {

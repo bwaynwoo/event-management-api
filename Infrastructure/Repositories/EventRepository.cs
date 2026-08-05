@@ -24,6 +24,7 @@ public class EventRepository : IEventRepository
     public async Task AddAsync(Event @event, CancellationToken cancellationToken)
     {
         await _db.Events.AddAsync(@event, cancellationToken);
+        await _db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
