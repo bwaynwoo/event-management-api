@@ -8,5 +8,5 @@ public interface IEventService
     Task<EventInfo> GetEventByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<EventInfo> CreateEventAsync(CreateEvent createEvent, CancellationToken cancellationToken = default);
     Task<EventInfo> UpdateEventAsync(Guid id, UpdateEvent updateEvent, CancellationToken cancellationToken = default);
-    Task<bool> DeleteEventAsync(Guid id, CancellationToken cancellationToken = default);
+    Task DeleteEventAsync(Guid id, CancellationToken cancellationToken = default);
 }

@@ -72,7 +72,8 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => _eventService.CreateEventAsync(createEvent));
+        var exception =
+            await Assert.ThrowsAsync<ValidationException>(() => _eventService.CreateEventAsync(createEvent));
         Assert.Contains("Title", exception.Errors.Keys);
     }
 
@@ -88,7 +89,8 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => _eventService.CreateEventAsync(createEvent));
+        var exception =
+            await Assert.ThrowsAsync<ValidationException>(() => _eventService.CreateEventAsync(createEvent));
         Assert.Contains("Title", exception.Errors.Keys);
     }
 
@@ -104,7 +106,8 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => _eventService.CreateEventAsync(createEvent));
+        var exception =
+            await Assert.ThrowsAsync<ValidationException>(() => _eventService.CreateEventAsync(createEvent));
         Assert.Contains("StartAt", exception.Errors.Keys);
     }
 
@@ -120,7 +123,8 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => _eventService.CreateEventAsync(createEvent));
+        var exception =
+            await Assert.ThrowsAsync<ValidationException>(() => _eventService.CreateEventAsync(createEvent));
         Assert.Contains("EndAt", exception.Errors.Keys);
     }
 
@@ -136,7 +140,8 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => _eventService.CreateEventAsync(createEvent));
+        var exception =
+            await Assert.ThrowsAsync<ValidationException>(() => _eventService.CreateEventAsync(createEvent));
         Assert.Contains("StartAt", exception.Errors.Keys);
     }
 
@@ -152,7 +157,8 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => _eventService.CreateEventAsync(createEvent));
+        var exception =
+            await Assert.ThrowsAsync<ValidationException>(() => _eventService.CreateEventAsync(createEvent));
         Assert.Contains("EndAt", exception.Errors.Keys);
     }
 
@@ -168,7 +174,8 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         };
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => _eventService.CreateEventAsync(createEvent));
+        var exception =
+            await Assert.ThrowsAsync<ValidationException>(() => _eventService.CreateEventAsync(createEvent));
         Assert.Contains("EndAt", exception.Errors.Keys);
     }
 
@@ -752,18 +759,17 @@ public sealed class EventServiceTests : IDisposable
             TotalSeats = 10,
         });
 
-        var result = await _eventService.DeleteEventAsync(createdEvent.Id);
+        await _eventService.DeleteEventAsync(createdEvent.Id);
 
-        Assert.True(result);
+        await Assert.ThrowsAsync<NotFoundException>(() => _eventService.GetEventByIdAsync(createdEvent.Id));
     }
 
     [Fact]
     public async Task DeleteEventAsync_WithInvalidId_ThrowsNotFoundException()
     {
         var invalidId = Guid.NewGuid();
-    
-        await Assert.ThrowsAsync<NotFoundException>(
-            () => _eventService.DeleteEventAsync(invalidId)
+
+        await Assert.ThrowsAsync<NotFoundException>(() => _eventService.DeleteEventAsync(invalidId)
         );
     }
 

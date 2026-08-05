@@ -58,14 +58,11 @@ internal sealed class EventService : IEventService
         return ToInfo(@event);
     }
 
-    public async Task<bool> DeleteEventAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteEventAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var @event = await _eventRepository.GetByIdAsync(id, cancellationToken);
-        if (@event == null)
-            return false;
         
         await _eventRepository.DeleteAsync(@event, cancellationToken);
-        return true;
     }
 
     internal static EventInfo ToInfo(Event @event) => new()
