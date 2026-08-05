@@ -1,0 +1,6 @@
+<Project>
+    <PropertyGroup>
+        <EfCoreVersion>10.0.10</EfCoreVersion>
+        <ExtensionsVersion>10.0.10</ExtensionsVersion>
+    </PropertyGroup>
+</Project>
