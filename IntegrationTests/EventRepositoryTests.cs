@@ -42,7 +42,7 @@ public class EventRepositoryTests : IAsyncLifetime
 
         await using var context = CreateContext();
         var futureDate = DateTime.UtcNow.AddDays(1);
-        var @event = Event.Create("Test Event", futureDate, futureDate.AddHours(2), 100, "Description", "Location");
+        var @event = Event.Create("Test Event", futureDate, futureDate.AddHours(2), 100, "Description");
         context.Events.Add(@event);
         await context.SaveChangesAsync();
 

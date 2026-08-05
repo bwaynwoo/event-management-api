@@ -24,8 +24,7 @@ public sealed class Event
         DateTime startAt,
         DateTime endAt,
         int totalSeats,
-        string? description = null,
-        string? location = null)
+        string? description = null)
     {
         Id = id;
         Title = title;
@@ -41,21 +40,18 @@ public sealed class Event
         DateTime? startAt,
         DateTime? endAt,
         int? totalSeats = null,
-        string? description = null,
-        string? location = null)
+        string? description = null)
     {
         ThrowIfNotValid(title, startAt, endAt, totalSeats);
 
-        return new Event(Guid.NewGuid(), title!.Trim(), startAt!.Value, endAt!.Value, totalSeats!.Value, description,
-            location);
+        return new Event(Guid.NewGuid(), title!.Trim(), startAt!.Value, endAt!.Value, totalSeats!.Value, description);
     }
 
     public void Update(
         string? title,
         DateTime? startAt,
         DateTime? endAt,
-        string? description = null,
-        string? location = null)
+        string? description = null)
     {
         ThrowIfNotValid(title, startAt, endAt, TotalSeats);
 
