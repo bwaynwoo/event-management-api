@@ -43,7 +43,8 @@ public class BookingRepositoryTests : IAsyncLifetime
         await using var context = CreateContext();
         var futureDate = DateTime.UtcNow.AddDays(1);
         var @event = Event.Create("Test Event", futureDate, futureDate.AddHours(2), 9);
-        var booking = Booking.CreatePending(@event.Id);
+        var userId = Guid.NewGuid();
+        var booking = Booking.CreatePending(@event.Id, userId);
         context.Events.Add(@event);
         context.Bookings.Add(booking);
         await context.SaveChangesAsync();
@@ -66,7 +67,8 @@ public class BookingRepositoryTests : IAsyncLifetime
         await using var context = CreateContext();
         var futureDate = DateTime.UtcNow.AddDays(1);
         var @event = Event.Create("Test Event", futureDate, futureDate.AddHours(2), 9);
-        var booking = Booking.CreatePending(@event.Id);
+        var userId = Guid.NewGuid();
+        var booking = Booking.CreatePending(@event.Id, userId);
         context.Events.Add(@event);
 
         var repository = new BookingRepository(context);
@@ -90,12 +92,13 @@ public class BookingRepositoryTests : IAsyncLifetime
         var @event = Event.Create("Test Event", futureDate, futureDate.AddHours(2), 9);
         context.Events.Add(@event);
         await context.SaveChangesAsync();
+        var userId = Guid.NewGuid();
 
-        var pendingBooking1 = Booking.CreatePending(@event.Id);
-        var pendingBooking2 = Booking.CreatePending(@event.Id);
-        var confirmedBooking = Booking.CreatePending(@event.Id);
+        var pendingBooking1 = Booking.CreatePending(@event.Id, userId);
+        var pendingBooking2 = Booking.CreatePending(@event.Id, userId);
+        var confirmedBooking = Booking.CreatePending(@event.Id, userId);
         confirmedBooking.Confirm();
-        var rejectedBooking = Booking.CreatePending(@event.Id);
+        var rejectedBooking = Booking.CreatePending(@event.Id, userId);
         rejectedBooking.Reject();
 
         context.Bookings.AddRange(pendingBooking1, pendingBooking2, confirmedBooking, rejectedBooking);
@@ -121,8 +124,9 @@ public class BookingRepositoryTests : IAsyncLifetime
         var futureDate = DateTime.UtcNow.AddDays(1);
         var @event = Event.Create("Test Event", futureDate, futureDate.AddHours(2), 9);
         context.Events.Add(@event);
-
-        var confirmedBooking = Booking.CreatePending(@event.Id);
+        var userId = Guid.NewGuid();
+        
+        var confirmedBooking = Booking.CreatePending(@event.Id, userId);
         confirmedBooking.Confirm();
         context.Bookings.Add(confirmedBooking);
         await context.SaveChangesAsync();

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Application.DTOs;
 using Application.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -12,9 +13,11 @@ internal static class BookingEndpoints
             Guid id,
             IBookingService bookingService,
             HttpContext httpContext,
+            ClaimsPrincipal user,
             CancellationToken cancellationToken) =>
         {
-            var booking = await bookingService.CreateBookingAsync(id, cancellationToken);
+            var userId = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var booking = await bookingService.CreateBookingAsync(id, userId, cancellationToken);
 
             var location = $"/bookings/{booking.Id}";
             httpContext.Response.Headers.Location = location;

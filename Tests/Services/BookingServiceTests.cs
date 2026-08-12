@@ -62,7 +62,8 @@ public sealed class BookingServiceTests : IDisposable
     public async Task CreateBookingAsync_WithValidEventId_ReturnsBookingInfoWithPendingStatus()
     {
         var eventId = await CreateTestEventAsync();
-        var result = await _bookingService.CreateBookingAsync(eventId);
+        var userId = Guid.NewGuid();
+        var result = await _bookingService.CreateBookingAsync(eventId, userId);
 
         Assert.NotNull(result);
         Assert.NotEqual(Guid.Empty, result.Id);
@@ -76,8 +77,9 @@ public sealed class BookingServiceTests : IDisposable
     {
         var eventId = await CreateTestEventAsync();
         var before = DateTime.UtcNow;
+        var userId = Guid.NewGuid();
 
-        var result = await _bookingService.CreateBookingAsync(eventId);
+        var result = await _bookingService.CreateBookingAsync(eventId, userId);
 
         var after = DateTime.UtcNow;
         Assert.InRange(result.CreatedAt, before, after);
@@ -87,8 +89,9 @@ public sealed class BookingServiceTests : IDisposable
     public async Task CreateBookingAsync_WithNonExistentEvent_ThrowsNotFoundException()
     {
         var invalidEventId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var exception = await Assert.ThrowsAsync<NotFoundException>(
-            () => _bookingService.CreateBookingAsync(invalidEventId));
+            () => _bookingService.CreateBookingAsync(invalidEventId, userId));
         Assert.Equal("Event not found", exception.Message);
     }
 
@@ -96,10 +99,11 @@ public sealed class BookingServiceTests : IDisposable
     public async Task CreateBookingAsync_MultipleBookingsForSameEvent_AllCreatedWithUniqueIds()
     {
         var eventId = await CreateTestEventAsync(totalSeats: 5);
+        var userId = Guid.NewGuid();
 
         var results = new List<BookingInfo>();
         for (int i = 0; i < 5; i++)
-            results.Add(await _bookingService.CreateBookingAsync(eventId));
+            results.Add(await _bookingService.CreateBookingAsync(eventId, userId));
 
         var uniqueIds = results.Select(r => r.Id).Distinct();
         Assert.Equal(5, uniqueIds.Count());
@@ -109,19 +113,21 @@ public sealed class BookingServiceTests : IDisposable
     public async Task CreateBookingAsync_WhenNoSeatsAvailable_ThrowsNoAvailableSeatsException()
     {
         var eventId = await CreateTestEventAsync(totalSeats: 1);
-        await _bookingService.CreateBookingAsync(eventId);
+        var userId = Guid.NewGuid();
+        await _bookingService.CreateBookingAsync(eventId, userId);
 
         await Assert.ThrowsAsync<NoAvailableSeatsException>(
-            () => _bookingService.CreateBookingAsync(eventId));
+            () => _bookingService.CreateBookingAsync(eventId, userId));
     }
 
     [Fact]
     public async Task CreateBookingAsync_DecrementsAvailableSeats()
     {
         var eventId = await CreateTestEventAsync(totalSeats: 3);
+        var userId = Guid.NewGuid();
 
-        await _bookingService.CreateBookingAsync(eventId);
-        await _bookingService.CreateBookingAsync(eventId);
+        await _bookingService.CreateBookingAsync(eventId, userId);
+        await _bookingService.CreateBookingAsync(eventId, userId);
 
         var eventInfo = await _eventService.GetEventByIdAsync(eventId);
         Assert.Equal(1, eventInfo.AvailableSeats);
@@ -135,7 +141,8 @@ public sealed class BookingServiceTests : IDisposable
     public async Task GetBookingByIdAsync_WithValidId_ReturnsCorrectBookingInfo()
     {
         var eventId = await CreateTestEventAsync();
-        var created = await _bookingService.CreateBookingAsync(eventId);
+        var userId = Guid.NewGuid();
+        var created = await _bookingService.CreateBookingAsync(eventId, userId);
 
         var result = await _bookingService.GetBookingByIdAsync(created.Id);
 
@@ -165,6 +172,7 @@ public sealed class BookingServiceTests : IDisposable
         const int totalSeats = 5;
         const int concurrentRequests = 20;
         var eventId = await CreateTestEventAsync(totalSeats: totalSeats);
+        var userId = Guid.NewGuid();
 
         var tasks = Enumerable.Range(0, concurrentRequests)
             .Select(_ => Task.Run(async () =>
@@ -173,7 +181,7 @@ public sealed class BookingServiceTests : IDisposable
                 var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
                 try
                 {
-                    await bookingService.CreateBookingAsync(eventId);
+                    await bookingService.CreateBookingAsync(eventId, userId);
                     return true;
                 }
                 catch (NoAvailableSeatsException)
@@ -195,13 +203,14 @@ public sealed class BookingServiceTests : IDisposable
         const int concurrentRequests = 10;
         var eventId = await CreateTestEventAsync(totalSeats: totalSeats);
         var bookingIds = new System.Collections.Concurrent.ConcurrentBag<Guid>();
+        var userId = Guid.NewGuid();
 
         var tasks = Enumerable.Range(0, concurrentRequests)
             .Select(_ => Task.Run(async () =>
             {
                 using var scope = _serviceProvider.CreateScope();
                 var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
-                var booking = await bookingService.CreateBookingAsync(eventId);
+                var booking = await bookingService.CreateBookingAsync(eventId, userId);
                 bookingIds.Add(booking.Id);
             }));
 

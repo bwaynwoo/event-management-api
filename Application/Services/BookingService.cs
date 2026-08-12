@@ -19,7 +19,7 @@ internal sealed class BookingService : IBookingService
         _bookingLock = bookingLock;
     }
 
-    public async Task<BookingInfo> CreateBookingAsync(Guid eventId, CancellationToken cancellationToken = default)
+    public async Task<BookingInfo> CreateBookingAsync(Guid eventId, Guid userId, CancellationToken cancellationToken = default)
     {
         await _bookingLock.WaitAsync(cancellationToken);
         try
@@ -28,8 +28,11 @@ internal sealed class BookingService : IBookingService
 
             if (!@event.TryReserveSeats())
                 throw new NoAvailableSeatsException("No available seats for this event");
+            
+            if (@event.StartAt <= DateTime.UtcNow)
+                throw new EventAlreadyStartedException(eventId);
 
-            var booking = Booking.CreatePending(eventId);
+            var booking = Booking.CreatePending(eventId, userId);
             await _bookingRepository.AddAsync(booking, cancellationToken);
 
             return ToInfo(booking);
@@ -51,6 +54,7 @@ internal sealed class BookingService : IBookingService
     {
         Id = booking.Id,
         EventId = booking.EventId,
+        UserId = booking.UserId,
         Status = booking.Status,
         CreatedAt = booking.CreatedAt,
         ProcessedAt = booking.ProcessedAt

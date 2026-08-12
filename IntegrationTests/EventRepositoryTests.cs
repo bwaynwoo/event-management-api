@@ -296,8 +296,9 @@ public class EventRepositoryTests : IAsyncLifetime
         var futureDate = DateTime.UtcNow.AddDays(1);
         var @event = Event.Create("Event with Bookings", futureDate, futureDate.AddHours(2), 100);
         context.Events.Add(@event);
+        var userId = Guid.NewGuid();
 
-        var booking = Booking.CreatePending(@event.Id);
+        var booking = Booking.CreatePending(@event.Id, userId);
         context.Bookings.Add(booking);
         await context.SaveChangesAsync();
 
