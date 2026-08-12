@@ -36,6 +36,13 @@ public class BookingRepository : IBookingRepository
             .ToListAsync(cancellationToken);
     }
     
+    public async Task<IReadOnlyList<Booking>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        return await _db.Bookings
+            .Where(b => b.UserId == userId)
+            .ToListAsync(cancellationToken);
+    }
+    
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         await _db.SaveChangesAsync(cancellationToken);

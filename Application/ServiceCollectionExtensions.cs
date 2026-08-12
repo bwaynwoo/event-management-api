@@ -10,6 +10,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SemaphoreSlim>(_ => new SemaphoreSlim(1, 1));
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         
+        services.AddScoped<IUserService, UserService>();
+        
         services.AddScoped<IEventService, EventService>();
         services.AddScoped<IBookingService, BookingService>();
             

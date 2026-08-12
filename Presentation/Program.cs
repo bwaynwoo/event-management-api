@@ -30,6 +30,7 @@ app.UseSwaggerUI(c => c.SwaggerEndpoint("/openapi/v1.json", "Open Api V1"));
 app.UseHttpsRedirection();
 app.UseExceptionHandler();
 
+app.MapAuthEndpoints();
 app.MapEventEndpoints();
 app.MapBookingEndpoints();
 
