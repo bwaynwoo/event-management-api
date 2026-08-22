@@ -19,6 +19,10 @@ internal sealed class BookingConfiguration : IEntityTypeConfiguration<Booking>
         builder.Property(b => b.EventId)
             .HasColumnName("event_id")
             .IsRequired();
+        
+        builder.Property(b => b.UserId)
+            .HasColumnName("user_id")
+            .IsRequired();
 
         builder.Property(b => b.Status)
             .HasColumnName("status")
