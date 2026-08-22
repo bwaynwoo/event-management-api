@@ -41,7 +41,11 @@ internal static class EventEndpoints
             return Results.Created($"/events/{createdEvent.Id}", createdEvent);
         })
         .WithName("CreateEvent")
+        .RequireAuthorization("Admin")
         .Produces<EventInfo>(StatusCodes.Status201Created)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
         .Produces<ValidationProblemDetails>(StatusCodes.Status400BadRequest);
 
@@ -51,7 +55,11 @@ internal static class EventEndpoints
             return Results.Ok(updatedEvent);
         })
         .WithName("UpdateEvent")
+        .RequireAuthorization("Admin")
         .Produces<EventInfo>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ValidationProblemDetails>(StatusCodes.Status400BadRequest);
@@ -62,7 +70,11 @@ internal static class EventEndpoints
             return Results.NoContent();
         })
         .WithName("DeleteEvent")
+        .RequireAuthorization("Admin")
         .Produces<EventInfo>(StatusCodes.Status204NoContent)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 
         return app;
