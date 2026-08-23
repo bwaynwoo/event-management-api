@@ -17,8 +17,7 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByLoginAsync(string login, CancellationToken cancellationToken)
     {
-        return await _db.Users.FirstOrDefaultAsync(b => b.Login == login, cancellationToken)
-               ?? throw new NotFoundException("User not found");
+        return await _db.Users.FirstOrDefaultAsync(b => b.Login == login, cancellationToken);
     }
 
     public async Task AddAsync(User user, CancellationToken cancellationToken)
