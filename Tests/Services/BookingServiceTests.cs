@@ -144,7 +144,7 @@ public sealed class BookingServiceTests : IDisposable
         var userId = Guid.NewGuid();
         var created = await _bookingService.CreateBookingAsync(eventId, userId);
 
-        var result = await _bookingService.GetBookingByIdAsync(created.Id);
+        var result = await _bookingService.GetBookingByIdAsync(created.Id, userId, Role.User);
 
         Assert.NotNull(result);
         Assert.Equal(created.Id, result.Id);
@@ -158,7 +158,7 @@ public sealed class BookingServiceTests : IDisposable
         var invalidId = Guid.NewGuid();
 
         var exception = await Assert.ThrowsAsync<NotFoundException>(
-            () => _bookingService.GetBookingByIdAsync(invalidId));
+            () => _bookingService.GetBookingByIdAsync(invalidId, Guid.Empty, Role.User));
         Assert.Equal("Booking not found", exception.Message);
     }
 

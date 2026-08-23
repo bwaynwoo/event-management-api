@@ -40,10 +40,9 @@ internal static class BookingEndpoints
                 CancellationToken cancellationToken) =>
             {
                 var userId = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
-                var booking = await bookingService.GetBookingByIdAsync(id, cancellationToken);
+                var userRole = Enum.Parse<Role>(user.FindFirstValue(ClaimTypes.Role)!);
 
-                if (booking.UserId != userId && !user.IsInRole(nameof(Role.Admin)))
-                    return Results.Forbid();
+                var booking = await bookingService.GetBookingByIdAsync(id, userId, userRole, cancellationToken);
 
                 return Results.Ok(booking);
             })
