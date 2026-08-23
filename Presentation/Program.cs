@@ -86,6 +86,7 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
+app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
