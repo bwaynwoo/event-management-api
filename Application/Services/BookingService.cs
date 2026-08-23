@@ -53,17 +53,22 @@ internal sealed class BookingService : IBookingService
             _bookingLock.Release();
         }
     }
-    
-    public async Task CancelBookingAsync(Guid bookingId, Guid userId, Role userRole, CancellationToken cancellationToken = default)
+
+    public async Task CancelBookingAsync(Guid bookingId, Guid userId, Role userRole,
+        CancellationToken cancellationToken = default)
     {
         var booking = await _bookingRepository.GetByIdAsync(bookingId, cancellationToken);
 
         if (booking.UserId != userId && userRole != Role.Admin)
             throw new ForbiddenException(userId, bookingId);
-        
-        booking.Cancel();
 
         var @event = await _eventRepository.GetByIdAsync(booking.EventId, cancellationToken);
+
+        if (@event.StartAt <= DateTime.UtcNow)
+            throw new ValidationException("Booking", "Cannot cancel booking after the event has started.");
+
+        booking.Cancel();
+
         @event.ReleaseSeats();
 
         await _bookingRepository.SaveChangesAsync(cancellationToken);
