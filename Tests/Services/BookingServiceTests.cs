@@ -3,6 +3,7 @@ using Application.Repositories;
 using Application.Services;
 using Domain.Enums;
 using Domain.Exceptions;
+using Domain.Models;
 using Infrastructure.DataAccess;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,7 @@ public sealed class BookingServiceTests : IDisposable
     private readonly IServiceScope _scope;
     private readonly IEventService _eventService;
     private readonly IBookingService _bookingService;
-    private readonly SemaphoreSlim _bookingLock = new SemaphoreSlim(1, 1);
+    private readonly SemaphoreSlim _bookingLock = new(1, 1);
 
     public BookingServiceTests()
     {
@@ -24,7 +25,7 @@ public sealed class BookingServiceTests : IDisposable
         var services = new ServiceCollection();
         services.AddDbContext<AppDbContext>(options =>
             options.UseInMemoryDatabase(dbName));
-        
+
         services.AddSingleton(_bookingLock);
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<IBookingRepository, BookingRepository>();
@@ -90,8 +91,9 @@ public sealed class BookingServiceTests : IDisposable
     {
         var invalidEventId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        var exception = await Assert.ThrowsAsync<NotFoundException>(
-            () => _bookingService.CreateBookingAsync(invalidEventId, userId));
+        var exception =
+            await Assert.ThrowsAsync<NotFoundException>(() =>
+                _bookingService.CreateBookingAsync(invalidEventId, userId));
         Assert.Equal("Event not found", exception.Message);
     }
 
@@ -116,8 +118,7 @@ public sealed class BookingServiceTests : IDisposable
         var userId = Guid.NewGuid();
         await _bookingService.CreateBookingAsync(eventId, userId);
 
-        await Assert.ThrowsAsync<NoAvailableSeatsException>(
-            () => _bookingService.CreateBookingAsync(eventId, userId));
+        await Assert.ThrowsAsync<NoAvailableSeatsException>(() => _bookingService.CreateBookingAsync(eventId, userId));
     }
 
     [Fact]
@@ -157,8 +158,8 @@ public sealed class BookingServiceTests : IDisposable
     {
         var invalidId = Guid.NewGuid();
 
-        var exception = await Assert.ThrowsAsync<NotFoundException>(
-            () => _bookingService.GetBookingByIdAsync(invalidId, Guid.Empty, Role.User));
+        var exception = await Assert.ThrowsAsync<NotFoundException>(() =>
+            _bookingService.GetBookingByIdAsync(invalidId, Guid.Empty, Role.User));
         Assert.Equal("Booking not found", exception.Message);
     }
 
@@ -217,6 +218,112 @@ public sealed class BookingServiceTests : IDisposable
         await Task.WhenAll(tasks);
 
         Assert.Equal(totalSeats, bookingIds.Distinct().Count());
+    }
+
+    #endregion
+
+    #region CancelBookingAsync Tests
+
+    [Fact]
+    public async Task CancelBookingAsync_WithValidData_CancelsBooking()
+    {
+        var eventId = await CreateTestEventAsync(totalSeats: 10);
+        var userId = Guid.NewGuid();
+        var booking = await _bookingService.CreateBookingAsync(eventId, userId);
+
+        await _bookingService.CancelBookingAsync(booking.Id, userId, Role.User);
+
+        var cancelledBooking = await _bookingService.GetBookingByIdAsync(booking.Id, userId, Role.User);
+        Assert.Equal(BookingStatus.Cancelled, cancelledBooking.Status);
+    }
+
+    [Fact]
+    public async Task CancelBookingAsync_WithAdminRole_CanCancelAnyBooking()
+    {
+        var eventId = await CreateTestEventAsync(totalSeats: 10);
+        var userId = Guid.NewGuid();
+        var booking = await _bookingService.CreateBookingAsync(eventId, userId);
+
+        await _bookingService.CancelBookingAsync(booking.Id, Guid.NewGuid(), Role.Admin);
+
+        var cancelledBooking = await _bookingService.GetBookingByIdAsync(booking.Id, userId, Role.Admin);
+        Assert.Equal(BookingStatus.Cancelled, cancelledBooking.Status);
+    }
+
+    [Fact]
+    public async Task CancelBookingAsync_WithWrongUser_ThrowsForbiddenException()
+    {
+        var eventId = await CreateTestEventAsync(totalSeats: 10);
+        var userId = Guid.NewGuid();
+        var anotherUserId = Guid.NewGuid();
+        var booking = await _bookingService.CreateBookingAsync(eventId, userId);
+
+        await Assert.ThrowsAsync<ForbiddenException>(() =>
+            _bookingService.CancelBookingAsync(booking.Id, anotherUserId, Role.User));
+    }
+
+    [Fact]
+    public async Task CancelBookingAsync_WithNonExistentBooking_ThrowsNotFoundException()
+    {
+        var invalidBookingId = Guid.NewGuid();
+
+        await Assert.ThrowsAsync<NotFoundException>(() =>
+            _bookingService.CancelBookingAsync(invalidBookingId, Guid.NewGuid(), Role.User));
+    }
+
+    [Fact]
+    public async Task CancelBookingAsync_AfterEventStarted_ThrowsValidationException()
+    {
+        var pastDate = DateTime.UtcNow.AddHours(-1);
+        var @event = (Event)Activator.CreateInstance(typeof(Event), nonPublic: true)!;
+
+        typeof(Event).GetProperty("Id")!.SetValue(@event, Guid.NewGuid());
+        typeof(Event).GetProperty("Title")!.SetValue(@event, "Past Event");
+        typeof(Event).GetProperty("StartAt")!.SetValue(@event, pastDate);
+        typeof(Event).GetProperty("EndAt")!.SetValue(@event, pastDate.AddHours(2));
+        typeof(Event).GetProperty("TotalSeats")!.SetValue(@event, 10);
+        typeof(Event).GetProperty("AvailableSeats")!.SetValue(@event, 10);
+
+        var userId = Guid.NewGuid();
+        var booking = Booking.CreatePending(@event.Id, userId);
+
+        using (var context = _serviceProvider.GetRequiredService<AppDbContext>())
+        {
+            context.Events.Add(@event);
+            context.Bookings.Add(booking);
+            await context.SaveChangesAsync();
+        }
+
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            _bookingService.CancelBookingAsync(booking.Id, userId, Role.User));
+    }
+
+    [Fact]
+    public async Task CancelBookingAsync_AlreadyCancelled_ThrowsValidationException()
+    {
+        var eventId = await CreateTestEventAsync(totalSeats: 10);
+        var userId = Guid.NewGuid();
+        var booking = await _bookingService.CreateBookingAsync(eventId, userId);
+
+        await _bookingService.CancelBookingAsync(booking.Id, userId, Role.User);
+
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            _bookingService.CancelBookingAsync(booking.Id, userId, Role.User));
+    }
+
+    [Fact]
+    public async Task CancelBookingAsync_ReleasesSeat()
+    {
+        var eventId = await CreateTestEventAsync(totalSeats: 10);
+        var userId = Guid.NewGuid();
+        var booking = await _bookingService.CreateBookingAsync(eventId, userId);
+
+        var eventInfoBefore = await _eventService.GetEventByIdAsync(eventId);
+
+        await _bookingService.CancelBookingAsync(booking.Id, userId, Role.User);
+
+        var eventInfoAfter = await _eventService.GetEventByIdAsync(eventId);
+        Assert.Equal(eventInfoBefore.AvailableSeats + 1, eventInfoAfter.AvailableSeats);
     }
 
     #endregion
