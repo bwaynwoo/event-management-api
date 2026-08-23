@@ -3,23 +3,24 @@ using Application.Repositories;
 using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace Application.Services;
 
 internal sealed class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
-    private readonly IPasswordHasher _passwordHasher;
+    private readonly PasswordHasher<object> _passwordHasher;
     private readonly ITokenGenerator _tokenGenerator;
 
     public UserService(
         IUserRepository userRepository,
-        IPasswordHasher passwordHasher,
-        ITokenGenerator tokenGenerator)
+        ITokenGenerator tokenGenerator,
+        PasswordHasher<object> passwordHasher)
     {
         _userRepository = userRepository;
-        _passwordHasher = passwordHasher;
         _tokenGenerator = tokenGenerator;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<UserInfo> RegisterAsync(string login, string password, Role? role = null,
@@ -28,11 +29,12 @@ internal sealed class UserService : IUserService
         var existingUser = await _userRepository.GetByLoginAsync(login, cancellationToken);
         if (existingUser != null)
             throw new ValidationException("Login", "User with this login already exists.");
-
-        var passwordHash = _passwordHasher.Hash(password);
-
+        
+        var tmpUser = new object();
+        var passwordHash = _passwordHasher.HashPassword(tmpUser, password);
+        
         var user = User.Create(login, passwordHash, role ?? Role.User);
-
+        
         await _userRepository.AddAsync(user, cancellationToken);
         await _userRepository.SaveChangesAsync(cancellationToken);
 
@@ -50,10 +52,13 @@ internal sealed class UserService : IUserService
 
         if (user == null)
             throw new UnauthorizedException("Invalid login or password.");
-
-        if (!_passwordHasher.Verify(password, user.PasswordHash))
+        
+        var tmpUser = new object();
+        var result = _passwordHasher.VerifyHashedPassword(tmpUser, user.PasswordHash, password);
+            
+        if (result == PasswordVerificationResult.Failed)
             throw new UnauthorizedException("Invalid login or password.");
-
+        
         return _tokenGenerator.GenerateToken(user);
     }
 }
