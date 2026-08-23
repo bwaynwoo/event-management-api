@@ -1,6 +1,6 @@
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
-using ProblemDetails = Domain.Exceptions.ProblemDetails;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation;
 
@@ -28,22 +28,20 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
             _ => (StatusCodes.Status500InternalServerError, "Internal Server Error")
         };
 
-        ProblemDetails problemDetails = exception is ValidationException validationEx
-            ? new ValidationProblemDetails()
-            {
-                Status = statusCode,
-                Title = title,
-                Detail = exception.Message,
-                Errors = validationEx.Errors.ToDictionary(
-                    k => k.Key,
-                    v => v.Value.ToArray())
-            }
-            : new ProblemDetails
-            {
-                Status = statusCode,
-                Title = title,
-                Detail = exception.Message
-            };
+        var problemDetails = new ProblemDetails
+        {
+            Status = statusCode,
+            Title = title,
+            Detail = exception.Message,
+            Instance = context.Request.Path
+        };
+        
+        if (exception is ValidationException validationEx)
+        {
+            problemDetails.Extensions["errors"] = validationEx.Errors.ToDictionary(
+                k => k.Key,
+                v => v.Value.ToArray());
+        }
 
         context.Response.StatusCode = statusCode;
         await context.Response.WriteAsJsonAsync(problemDetails, cancellationToken);

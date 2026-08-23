@@ -60,10 +60,7 @@ internal sealed class BookingService : IBookingService
 
         if (booking.UserId != userId && userRole != Role.Admin)
             throw new ForbiddenException(userId, bookingId);
-
-        if (booking.Status != BookingStatus.Pending)
-            throw new ValidationException("Booking", $"Cannot cancel booking with status '{booking.Status}'.");
-
+        
         booking.Cancel();
 
         var @event = await _eventRepository.GetByIdAsync(booking.EventId, cancellationToken);
