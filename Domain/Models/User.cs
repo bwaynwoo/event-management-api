@@ -5,8 +5,8 @@ namespace Domain.Models;
 public class User
 {
     public Guid Id { get; private set; }
-    public string Login { get; private set; }
-    public string PasswordHash { get; private set; }
+    public string Login { get; private set; } = string.Empty;
+    public string PasswordHash { get; private set; } = string.Empty;
     public Role Role { get; private set; }
 
     private User() { }
