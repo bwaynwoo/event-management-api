@@ -25,6 +25,10 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
             NotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
             ValidationException => (StatusCodes.Status400BadRequest, "Validation Error"),
             NoAvailableSeatsException => (StatusCodes.Status409Conflict, "No Available Seats"),
+            UnauthorizedException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
+            ForbiddenException  => (StatusCodes.Status403Forbidden, "Forbidden"),
+            BookingLimitExceededException  => (StatusCodes.Status409Conflict, "Booking Limit Exceeded"),
+            EventAlreadyStartedException  => (StatusCodes.Status400BadRequest, "Event already started"),
             _ => (StatusCodes.Status500InternalServerError, "Internal Server Error")
         };
 
