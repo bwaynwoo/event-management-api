@@ -95,6 +95,8 @@ if (builder.Environment.IsDevelopment())
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+builder.Services.AddSingleton(TimeProvider.System);
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())

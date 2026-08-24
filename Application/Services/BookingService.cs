@@ -11,14 +11,16 @@ internal sealed class BookingService : IBookingService
     private readonly IBookingRepository _bookingRepository;
     private readonly IEventRepository _eventRepository;
     private readonly SemaphoreSlim _bookingLock;
+    private readonly TimeProvider _timeProvider;
     private const int MaxActiveBookingsPerUser = 10;
 
     public BookingService(IBookingRepository bookingRepository, IEventRepository eventRepository,
-        SemaphoreSlim bookingLock)
+        SemaphoreSlim bookingLock, TimeProvider timeProvider)
     {
         _bookingRepository = bookingRepository;
         _eventRepository = eventRepository;
         _bookingLock = bookingLock;
+        _timeProvider = timeProvider;
     }
 
     public async Task<BookingInfo> CreateBookingAsync(Guid eventId, Guid userId,
@@ -29,7 +31,7 @@ internal sealed class BookingService : IBookingService
         {
             var @event = await _eventRepository.GetByIdAsync(eventId, cancellationToken);
 
-            if (@event.StartAt <= DateTime.UtcNow)
+            if (@event.StartAt <= _timeProvider.GetUtcNow().UtcDateTime)
                 throw new EventAlreadyStartedException(eventId);
 
             var userBookings = await _bookingRepository.GetByUserIdAsync(userId, cancellationToken);
@@ -64,7 +66,7 @@ internal sealed class BookingService : IBookingService
 
         var @event = await _eventRepository.GetByIdAsync(booking.EventId, cancellationToken);
 
-        if (@event.StartAt <= DateTime.UtcNow)
+        if (@event.StartAt <= _timeProvider.GetUtcNow().UtcDateTime)
             throw new ValidationException("Booking", "Cannot cancel booking after the event has started.");
 
         booking.Cancel();

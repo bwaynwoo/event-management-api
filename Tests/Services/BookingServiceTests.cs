@@ -8,6 +8,7 @@ using Infrastructure.DataAccess;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 
 namespace Tests.Services;
 
@@ -23,6 +24,7 @@ public sealed class BookingServiceTests : IDisposable
     {
         var dbName = Guid.NewGuid().ToString();
         var services = new ServiceCollection();
+        services.AddSingleton(TimeProvider.System);
         services.AddDbContext<AppDbContext>(options =>
             options.UseInMemoryDatabase(dbName));
 
@@ -274,28 +276,37 @@ public sealed class BookingServiceTests : IDisposable
     [Fact]
     public async Task CancelBookingAsync_AfterEventStarted_ThrowsValidationException()
     {
-        var pastDate = DateTime.UtcNow.AddHours(-1);
-        var @event = (Event)Activator.CreateInstance(typeof(Event), nonPublic: true)!;
-
-        typeof(Event).GetProperty("Id")!.SetValue(@event, Guid.NewGuid());
-        typeof(Event).GetProperty("Title")!.SetValue(@event, "Past Event");
-        typeof(Event).GetProperty("StartAt")!.SetValue(@event, pastDate);
-        typeof(Event).GetProperty("EndAt")!.SetValue(@event, pastDate.AddHours(2));
-        typeof(Event).GetProperty("TotalSeats")!.SetValue(@event, 10);
-        typeof(Event).GetProperty("AvailableSeats")!.SetValue(@event, 10);
-
         var userId = Guid.NewGuid();
-        var booking = Booking.CreatePending(@event.Id, userId);
+        var eventId = Guid.NewGuid();
+        var bookingId = Guid.NewGuid();
 
-        using (var context = _serviceProvider.GetRequiredService<AppDbContext>())
-        {
-            context.Events.Add(@event);
-            context.Bookings.Add(booking);
-            await context.SaveChangesAsync();
-        }
+        var @event = Event.Create("Test Event", DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(2), 10);
+        var booking = Booking.CreatePending(eventId, userId);
+
+        var bookingRepoMock = new Mock<IBookingRepository>();
+        var eventRepoMock = new Mock<IEventRepository>();
+        var timeProviderMock = new Mock<TimeProvider>();
+
+        bookingRepoMock
+            .Setup(x => x.GetByIdAsync(bookingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(booking);
+
+        eventRepoMock
+            .Setup(x => x.GetByIdAsync(eventId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(@event);
+
+        timeProviderMock
+            .Setup(x => x.GetUtcNow())
+            .Returns(new DateTimeOffset(DateTime.UtcNow.AddDays(2)));
+
+        var bookingService = new BookingService(
+            bookingRepoMock.Object,
+            eventRepoMock.Object,
+            new SemaphoreSlim(1, 1),
+            timeProviderMock.Object);
 
         await Assert.ThrowsAsync<ValidationException>(() =>
-            _bookingService.CancelBookingAsync(booking.Id, userId, Role.User));
+            bookingService.CancelBookingAsync(bookingId, userId, Role.User));
     }
 
     [Fact]

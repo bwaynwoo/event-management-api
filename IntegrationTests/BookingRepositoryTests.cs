@@ -189,7 +189,7 @@ public class BookingRepositoryTests : IAsyncLifetime
         var bookingRepository = new BookingRepository(context);
         var eventRepository = new EventRepository(context);
         var bookingLock = new SemaphoreSlim(1, 1);
-        var bookingService = new BookingService(bookingRepository, eventRepository, bookingLock);
+        var bookingService = new BookingService(bookingRepository, eventRepository, bookingLock, TimeProvider.System);
 
         await Assert.ThrowsAsync<EventAlreadyStartedException>(() =>
             bookingService.CreateBookingAsync(@event.Id, user.Id, CancellationToken.None));
@@ -222,7 +222,7 @@ public class BookingRepositoryTests : IAsyncLifetime
         var bookingRepository = new BookingRepository(context);
         var eventRepository = new EventRepository(context);
         var bookingLock = new SemaphoreSlim(1, 1);
-        var bookingService = new BookingService(bookingRepository, eventRepository, bookingLock);
+        var bookingService = new BookingService(bookingRepository, eventRepository, bookingLock, TimeProvider.System);
 
         await Assert.ThrowsAsync<BookingLimitExceededException>(() =>
             bookingService.CreateBookingAsync(@event.Id, user.Id, CancellationToken.None));
@@ -259,7 +259,7 @@ public class BookingRepositoryTests : IAsyncLifetime
         var bookingRepository = new BookingRepository(context);
         var eventRepository = new EventRepository(context);
         var bookingLock = new SemaphoreSlim(1, 1);
-        var bookingService = new BookingService(bookingRepository, eventRepository, bookingLock);
+        var bookingService = new BookingService(bookingRepository, eventRepository, bookingLock, TimeProvider.System);
 
         var result = await bookingService.CreateBookingAsync(@event.Id, user2.Id, CancellationToken.None);
 

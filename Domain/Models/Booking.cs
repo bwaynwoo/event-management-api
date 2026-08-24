@@ -26,32 +26,36 @@ public sealed class Booking
         CreatedAt = createdAt;
     }
 
-    public static Booking CreatePending(Guid eventId, Guid userId)
+    public static Booking CreatePending(Guid eventId, Guid userId, TimeProvider? timeProvider = null)
     {
         if (eventId == Guid.Empty)
             throw new ValidationException(nameof(EventId), "EventId cannot be empty");
+        var now = (timeProvider ?? TimeProvider.System).GetUtcNow().UtcDateTime;
 
-        return new Booking(Guid.NewGuid(), eventId, userId, BookingStatus.Pending, DateTime.UtcNow);
+        return new Booking(Guid.NewGuid(), eventId, userId, BookingStatus.Pending, now);
     }
 
-    public void Confirm()
+    public void Confirm(TimeProvider? timeProvider = null)
     {
+        var now = (timeProvider ?? TimeProvider.System).GetUtcNow().UtcDateTime;
         Status = BookingStatus.Confirmed;
-        ProcessedAt = DateTime.UtcNow;
+        ProcessedAt = now;
     }
 
-    public void Reject()
+    public void Reject(TimeProvider? timeProvider = null)
     {
+        var now = (timeProvider ?? TimeProvider.System).GetUtcNow().UtcDateTime;
         Status = BookingStatus.Rejected;
-        ProcessedAt = DateTime.UtcNow;
+        ProcessedAt = now;
     }
 
-    public void Cancel()
+    public void Cancel(TimeProvider? timeProvider = null)
     {
         if (Status == BookingStatus.Cancelled)
             throw new ValidationException("Booking", "Booking is already cancelled.");
 
+        var now = (timeProvider ?? TimeProvider.System).GetUtcNow().UtcDateTime;
         Status = BookingStatus.Cancelled;
-        ProcessedAt = DateTime.UtcNow;
+        ProcessedAt = now;
     }
 }
