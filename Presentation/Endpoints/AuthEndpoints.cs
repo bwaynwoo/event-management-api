@@ -1,6 +1,5 @@
 using Application.DTOs;
 using Application.Services;
-using Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Presentation.Endpoints;
@@ -10,14 +9,13 @@ internal static class AuthEndpoints
     internal static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/auth/register", async (
-                RegisterRequest request,
+                string login, string password,
                 IUserService userService,
                 CancellationToken cancellationToken) =>
             {
                 var userInfo = await userService.RegisterAsync(
-                    request.Login,
-                    request.Password,
-                    request.Role,
+                    login,
+                    password,
                     cancellationToken);
 
                 return Results.Created($"/users/{userInfo.Id}", userInfo);
@@ -29,13 +27,13 @@ internal static class AuthEndpoints
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 
         app.MapPost("/auth/login", async (
-                LoginRequest request,
+                string login, string password,
                 IUserService userService,
                 CancellationToken cancellationToken) =>
             {
                 var token = await userService.LoginAsync(
-                    request.Login,
-                    request.Password,
+                    login,
+                    password,
                     cancellationToken);
 
                 return Results.Ok(new { token });
@@ -45,10 +43,20 @@ internal static class AuthEndpoints
             .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 
+        app.MapPost("/auth/register-admin", async (
+                string login, string password,
+                IUserService userService,
+                CancellationToken cancellationToken) =>
+            {
+                var userInfo = await userService.RegisterAdminAsync(
+                    login,
+                    password,
+                    cancellationToken);
+
+                return Results.Created($"/users/{userInfo.Id}", userInfo);
+            })
+            .RequireAuthorization("Admin");
+
         return app;
     }
-
-    internal record RegisterRequest(string Login, string Password, Role? Role);
-
-    internal record LoginRequest(string Login, string Password);
 }

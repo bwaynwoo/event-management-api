@@ -1,6 +1,5 @@
 using Application.Repositories;
 using Application.Services;
-using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using Microsoft.AspNetCore.Identity;
@@ -39,13 +38,12 @@ public sealed class UserServiceTests
 
         Assert.NotNull(result);
         Assert.Equal("testuser", result.Login);
-        Assert.Equal(Role.User, result.Role);
         Assert.NotEqual(Guid.Empty, result.Id);
-        
+
         _userRepoMock.Verify(x => x.AddAsync(
             It.Is<User>(u => u.Login == "testuser" && u.PasswordHash != "password123"),
             It.IsAny<CancellationToken>()), Times.Once);
-        
+
         _userRepoMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -57,9 +55,10 @@ public sealed class UserServiceTests
             .Setup(x => x.GetByLoginAsync("existinguser", It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(
-            () => _userService.RegisterAsync("existinguser", "password123"));
-        
+        var exception =
+            await Assert.ThrowsAsync<ValidationException>(() =>
+                _userService.RegisterAsync("existinguser", "password123"));
+
         Assert.Contains("Login", exception.Errors.Keys);
     }
 
@@ -70,20 +69,32 @@ public sealed class UserServiceTests
             .Setup(x => x.GetByLoginAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
-        await Assert.ThrowsAsync<ArgumentException>(
-            () => _userService.RegisterAsync("", "password123"));
+        await Assert.ThrowsAsync<ArgumentException>(() => _userService.RegisterAsync("", "password123"));
     }
 
     [Fact]
-    public async Task RegisterAsync_WithAdminRole_CreatesAdmin()
+    public async Task RegisterAdminAsync_WithValidData_CreatesAdminUser()
     {
         _userRepoMock
             .Setup(x => x.GetByLoginAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
-        var result = await _userService.RegisterAsync("adminuser", "password123", Role.Admin);
+        var result = await _userService.RegisterAdminAsync("adminuser", "password123");
 
-        Assert.Equal(Role.Admin, result.Role);
+        Assert.NotNull(result);
+        Assert.Equal("adminuser", result.Login);
+    }
+
+    [Fact]
+    public async Task RegisterAdminAsync_WithExistingLogin_ThrowsValidationException()
+    {
+        var existingUser = User.Create("existingadmin", "somehash");
+        _userRepoMock
+            .Setup(x => x.GetByLoginAsync("existingadmin", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingUser);
+
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            _userService.RegisterAdminAsync("existingadmin", "password123"));
     }
 
     [Fact]
@@ -92,7 +103,7 @@ public sealed class UserServiceTests
         _userRepoMock
             .Setup(x => x.GetByLoginAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
-        
+
         User? savedUser = null;
         _userRepoMock
             .Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
@@ -113,11 +124,11 @@ public sealed class UserServiceTests
     {
         var passwordHash = _passwordHasher.HashPassword(new object(), "password123");
         var user = User.Create("testuser", passwordHash);
-        
+
         _userRepoMock
             .Setup(x => x.GetByLoginAsync("testuser", It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        
+
         _tokenGeneratorMock
             .Setup(x => x.GenerateToken(user))
             .Returns("jwt-token-123");
@@ -133,13 +144,12 @@ public sealed class UserServiceTests
     {
         var passwordHash = _passwordHasher.HashPassword(new object(), "correctPassword");
         var user = User.Create("testuser", passwordHash);
-        
+
         _userRepoMock
             .Setup(x => x.GetByLoginAsync("testuser", It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        await Assert.ThrowsAsync<UnauthorizedException>(
-            () => _userService.LoginAsync("testuser", "wrongPassword"));
+        await Assert.ThrowsAsync<UnauthorizedException>(() => _userService.LoginAsync("testuser", "wrongPassword"));
     }
 
     [Fact]
@@ -149,8 +159,7 @@ public sealed class UserServiceTests
             .Setup(x => x.GetByLoginAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
-        await Assert.ThrowsAsync<UnauthorizedException>(
-            () => _userService.LoginAsync("nonexistent", "password123"));
+        await Assert.ThrowsAsync<UnauthorizedException>(() => _userService.LoginAsync("nonexistent", "password123"));
     }
 
     [Fact]
@@ -160,8 +169,7 @@ public sealed class UserServiceTests
             .Setup(x => x.GetByLoginAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
-        await Assert.ThrowsAsync<UnauthorizedException>(
-            () => _userService.LoginAsync("", "password123"));
+        await Assert.ThrowsAsync<UnauthorizedException>(() => _userService.LoginAsync("", "password123"));
     }
 
     #endregion
