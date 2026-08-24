@@ -12,22 +12,23 @@ internal static class EventEndpoints
 
         group.MapGet("/", async (
                 IEventService eventService,
+                CancellationToken cancellationToken,
                 int page = 1,
                 int pageSize = 10,
                 DateTime? from = null,
                 DateTime? to = null,
                 string? title = null) =>
             {
-                var events = await eventService.GetAllEventsAsync(page, pageSize, from, to, title);
+                var events = await eventService.GetAllEventsAsync(page, pageSize, from, to, title, cancellationToken);
                 return Results.Ok(events);
             })
             .WithName("GetAllEvents")
             .Produces<PaginatedResult<EventInfo>>(StatusCodes.Status200OK)
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 
-        group.MapGet("/{id:guid}", async (Guid id, IEventService eventService) =>
+        group.MapGet("/{id:guid}", async (Guid id, IEventService eventService, CancellationToken cancellationToken) =>
             {
-                var @event = await eventService.GetEventByIdAsync(id);
+                var @event = await eventService.GetEventByIdAsync(id, cancellationToken);
                 return Results.Ok(@event);
             })
             .WithName("GetEventById")
@@ -35,11 +36,12 @@ internal static class EventEndpoints
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
             .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
 
-        group.MapPost("/", async (CreateEvent request, IEventService eventService) =>
-            {
-                var createdEvent = await eventService.CreateEventAsync(request);
-                return Results.Created($"/events/{createdEvent.Id}", createdEvent);
-            })
+        group.MapPost("/",
+                async (CreateEvent request, IEventService eventService, CancellationToken cancellationToken) =>
+                {
+                    var createdEvent = await eventService.CreateEventAsync(request, cancellationToken);
+                    return Results.Created($"/events/{createdEvent.Id}", createdEvent);
+                })
             .WithName("CreateEvent")
             .RequireAuthorization("Admin")
             .Produces<EventInfo>(StatusCodes.Status201Created)
@@ -49,11 +51,12 @@ internal static class EventEndpoints
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
             .Produces<ValidationProblemDetails>(StatusCodes.Status400BadRequest);
 
-        group.MapPut("/{id:guid}", async (Guid id, UpdateEvent request, IEventService eventService) =>
-            {
-                var updatedEvent = await eventService.UpdateEventAsync(id, request);
-                return Results.Ok(updatedEvent);
-            })
+        group.MapPut("/{id:guid}",
+                async (Guid id, UpdateEvent request, IEventService eventService, CancellationToken cancellationToken) =>
+                {
+                    var updatedEvent = await eventService.UpdateEventAsync(id, request, cancellationToken);
+                    return Results.Ok(updatedEvent);
+                })
             .WithName("UpdateEvent")
             .RequireAuthorization("Admin")
             .Produces<EventInfo>(StatusCodes.Status200OK)
@@ -64,11 +67,12 @@ internal static class EventEndpoints
             .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
             .Produces<ValidationProblemDetails>(StatusCodes.Status400BadRequest);
 
-        group.MapDelete("/{id:guid}", async (Guid id, IEventService eventService) =>
-            {
-                await eventService.DeleteEventAsync(id);
-                return Results.NoContent();
-            })
+        group.MapDelete("/{id:guid}",
+                async (Guid id, IEventService eventService, CancellationToken cancellationToken) =>
+                {
+                    await eventService.DeleteEventAsync(id, cancellationToken);
+                    return Results.NoContent();
+                })
             .WithName("DeleteEvent")
             .RequireAuthorization("Admin")
             .Produces<EventInfo>(StatusCodes.Status204NoContent)
