@@ -50,7 +50,7 @@ public sealed class Booking
     {
         if (Status == BookingStatus.Cancelled)
             throw new ValidationException("Booking", "Booking is already cancelled.");
-        
+
         Status = BookingStatus.Cancelled;
         ProcessedAt = DateTime.UtcNow;
     }

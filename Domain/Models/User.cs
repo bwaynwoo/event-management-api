@@ -23,7 +23,7 @@ public class User
     {
         if (string.IsNullOrWhiteSpace(login))
             throw new ArgumentException("Login cannot be empty", nameof(login));
-            
+
         if (string.IsNullOrWhiteSpace(passwordHash))
             throw new ArgumentException("Password hash cannot be empty", nameof(passwordHash));
 

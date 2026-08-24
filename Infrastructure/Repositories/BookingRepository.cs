@@ -11,7 +11,7 @@ public class BookingRepository : IBookingRepository
 {
     private readonly AppDbContext _db;
 
-    public BookingRepository (AppDbContext db)
+    public BookingRepository(AppDbContext db)
     {
         _db = db;
     }
@@ -19,7 +19,7 @@ public class BookingRepository : IBookingRepository
     public async Task<Booking> GetByIdAsync(Guid bookingId, CancellationToken cancellationToken)
     {
         return await _db.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, cancellationToken)
-            ?? throw new NotFoundException("Booking not found");
+               ?? throw new NotFoundException("Booking not found");
     }
 
     public async Task AddAsync(Booking booking, CancellationToken cancellationToken)
@@ -35,14 +35,14 @@ public class BookingRepository : IBookingRepository
             .Select(b => b.Id)
             .ToListAsync(cancellationToken);
     }
-    
+
     public async Task<IReadOnlyList<Booking>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken)
     {
         return await _db.Bookings
             .Where(b => b.UserId == userId)
             .ToListAsync(cancellationToken);
     }
-    
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         await _db.SaveChangesAsync(cancellationToken);

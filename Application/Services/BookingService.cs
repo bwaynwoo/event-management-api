@@ -75,10 +75,11 @@ internal sealed class BookingService : IBookingService
     }
 
 
-    public async Task<BookingInfo> GetBookingByIdAsync(Guid bookingId, Guid userId, Role userRole, CancellationToken cancellationToken = default)
+    public async Task<BookingInfo> GetBookingByIdAsync(Guid bookingId, Guid userId, Role userRole,
+        CancellationToken cancellationToken = default)
     {
         var booking = await _bookingRepository.GetByIdAsync(bookingId, cancellationToken);
-        
+
         if (booking.UserId != userId && userRole != Role.Admin)
             throw new ForbiddenException(userId, bookingId);
 

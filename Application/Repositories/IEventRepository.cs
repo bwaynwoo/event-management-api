@@ -15,6 +15,6 @@ public interface IEventRepository
         DateTime? to,
         string? title,
         CancellationToken cancellationToken);
-    
+
     Task DeleteAsync(Event @event, CancellationToken cancellationToken);
 }

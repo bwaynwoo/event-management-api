@@ -23,11 +23,11 @@ internal static class BookingEndpoints
                 var location = $"/bookings/{booking.Id}";
                 httpContext.Response.Headers.Location = location;
 
-                return Results.Accepted(location, booking);
+                return Results.Created(location, booking);
             })
             .WithName("CreateBooking")
             .RequireAuthorization()
-            .Produces<BookingInfo>(StatusCodes.Status202Accepted)
+            .Produces<BookingInfo>(StatusCodes.Status201Created)
             .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
             .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
             .Produces<ProblemDetails>(StatusCodes.Status409Conflict)

@@ -62,7 +62,7 @@ internal sealed class BookingBackgroundService : BackgroundService
             using var scope = _scopeFactory.CreateScope();
             var contextBooking = scope.ServiceProvider.GetRequiredService<IBookingRepository>();
             var contextEvent = scope.ServiceProvider.GetRequiredService<IEventRepository>();
-            
+
             var booking = await contextBooking.GetByIdAsync(bookingId, stoppingToken);
             if (booking == null || booking.Status != BookingStatus.Pending)
                 return;
