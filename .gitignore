@@ -56,3 +56,4 @@ nunit-*.xml
 .DS_Store
 EventManagementApi.sln.DotSettings.user
 Presentation/appsettings.Development.json
+*.user
