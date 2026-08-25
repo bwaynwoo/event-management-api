@@ -17,22 +17,5 @@
                 { field, new[] { error } }
             };
         }
-
-        public ValidationProblemDetails ToProblemDetails()
-            => new ValidationProblemDetails
-            {
-                Status = 400,
-                Title = "Validation Failed",
-                Detail = "One or more validation errors occurred.",
-                Type = "https://tools.ietf.org/html/rfc9110#section-15.5.1",
-                Errors = Errors.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.ToArray())
-            };
-    }
-
-    public class ValidationProblemDetails : ProblemDetails
-    {
-        public IDictionary<string, string[]> Errors { get; set; } = new Dictionary<string, string[]>();
     }
 }

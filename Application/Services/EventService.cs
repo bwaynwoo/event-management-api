@@ -15,7 +15,8 @@ internal sealed class EventService : IEventService
 
     public async Task<EventInfo> CreateEventAsync(CreateEvent request, CancellationToken cancellationToken = default)
     {
-        var @event = Event.Create(request.Title, request.StartAt, request.EndAt, request.TotalSeats, request.Description);
+        var @event = Event.Create(request.Title, request.StartAt, request.EndAt, request.TotalSeats,
+            request.Description);
         await _eventRepository.AddAsync(@event, cancellationToken);
         return ToInfo(@event);
     }
@@ -47,7 +48,8 @@ internal sealed class EventService : IEventService
         };
     }
 
-    public async Task<EventInfo> UpdateEventAsync(Guid id, UpdateEvent request, CancellationToken cancellationToken = default)
+    public async Task<EventInfo> UpdateEventAsync(Guid id, UpdateEvent request,
+        CancellationToken cancellationToken = default)
     {
         var @event = await _eventRepository.GetByIdAsync(id, cancellationToken);
 
@@ -60,7 +62,7 @@ internal sealed class EventService : IEventService
     public async Task DeleteEventAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var @event = await _eventRepository.GetByIdAsync(id, cancellationToken);
-        
+
         await _eventRepository.DeleteAsync(@event, cancellationToken);
     }
 
