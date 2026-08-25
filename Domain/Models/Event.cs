@@ -59,6 +59,11 @@ public sealed class Event
         DateTime? endAt,
         string? description = null)
     {
+        if (startAt.HasValue)
+            startAt = DateTime.SpecifyKind(startAt.Value, DateTimeKind.Utc);
+
+        if (endAt.HasValue)
+            endAt = DateTime.SpecifyKind(endAt.Value, DateTimeKind.Utc);
         ThrowIfNotValid(title, startAt, endAt, TotalSeats);
 
         Title = title!;
