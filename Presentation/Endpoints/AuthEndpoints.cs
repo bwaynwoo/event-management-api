@@ -9,13 +9,13 @@ internal static class AuthEndpoints
     internal static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/auth/register", async (
-                string login, string password,
+                LoginRequest request,
                 IUserService userService,
                 CancellationToken cancellationToken) =>
             {
                 var userInfo = await userService.RegisterAsync(
-                    login,
-                    password,
+                    request.Login,
+                    request.Password,
                     cancellationToken);
 
                 return Results.Created($"/users/{userInfo.Id}", userInfo);
@@ -27,13 +27,13 @@ internal static class AuthEndpoints
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 
         app.MapPost("/auth/login", async (
-                string login, string password,
+                LoginRequest request,
                 IUserService userService,
                 CancellationToken cancellationToken) =>
             {
                 var token = await userService.LoginAsync(
-                    login,
-                    password,
+                    request.Login,
+                    request.Password,
                     cancellationToken);
 
                 return Results.Ok(new { token });
@@ -44,13 +44,13 @@ internal static class AuthEndpoints
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 
         app.MapPost("/auth/register-admin", async (
-                string login, string password,
+                LoginRequest request,
                 IUserService userService,
                 CancellationToken cancellationToken) =>
             {
                 var userInfo = await userService.RegisterAdminAsync(
-                    login,
-                    password,
+                    request.Login,
+                    request.Password,
                     cancellationToken);
 
                 return Results.Created($"/users/{userInfo.Id}", userInfo);
@@ -60,3 +60,5 @@ internal static class AuthEndpoints
         return app;
     }
 }
+
+internal record LoginRequest(string Login, string Password);
