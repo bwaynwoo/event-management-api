@@ -1,7 +1,6 @@
 using Application.DTOs;
-using Domain.Enums;
 
-namespace Application.Services;
+namespace UserService.Application.Services;
 
 public interface IUserService
 {

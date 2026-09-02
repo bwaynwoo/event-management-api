@@ -1,11 +1,12 @@
 using Application.DTOs;
-using Application.Repositories;
-using Domain.Enums;
+using Application.Services;
 using Domain.Exceptions;
 using Domain.Models;
 using Microsoft.AspNetCore.Identity;
+using UserService.Application.Repositories;
+using UserService.Domain.Enums;
 
-namespace Application.Services;
+namespace UserService.Application.Services;
 
 internal sealed class UserService : IUserService
 {
