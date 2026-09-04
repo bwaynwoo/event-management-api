@@ -4,7 +4,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>UserService.Presentation</RootNamespace>
     <UserSecretsId>2308b1df-6e43-47eb-88f8-f115bf2afb66</UserSecretsId>
   </PropertyGroup>
 
