@@ -2,7 +2,7 @@ using Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Presentation;
+namespace UserService.Presentation;
 
 internal sealed class GlobalExceptionHandler : IExceptionHandler
 {

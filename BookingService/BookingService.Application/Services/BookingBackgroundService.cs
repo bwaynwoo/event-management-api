@@ -10,8 +10,7 @@ namespace BookingService.Application.Services;
 
 internal sealed class BookingBackgroundService(
     IServiceScopeFactory scopeFactory,
-    ILogger<BookingBackgroundService> logger,
-    IEventPublisher publisher)
+    ILogger<BookingBackgroundService> logger)
     : BackgroundService
 {
     private static readonly TimeSpan PollingInterval = TimeSpan.FromSeconds(5);
@@ -59,15 +58,6 @@ internal sealed class BookingBackgroundService(
 
             current.Confirm();
             await repository.UpdateAsync(current, stoppingToken);
-
-            await publisher.PublishBookingConfirmedAsync(new BookingConfirmed
-            {
-                BookingId = current.Id,
-                EventId = current.EventId,
-                UserId = current.UserId,
-                Seats = 1,
-                ConfirmedAt = DateTime.UtcNow
-            }, stoppingToken);
 
             logger.LogInformation("Booking {BookingId} confirmed and published", current.Id);
         }
