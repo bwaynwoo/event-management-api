@@ -1,4 +1,4 @@
-﻿namespace Domain.Exceptions
+﻿namespace UserService.Domain.Exceptions
 {
     public sealed class ValidationException : Exception
     {

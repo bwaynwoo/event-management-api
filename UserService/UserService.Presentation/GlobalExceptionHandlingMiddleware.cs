@@ -1,6 +1,7 @@
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using UserService.Domain.Exceptions;
 
 namespace UserService.Presentation;
 

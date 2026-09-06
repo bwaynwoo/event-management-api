@@ -1,6 +1,6 @@
-using Domain.Models;
+using UserService.Domain.Models;
 
-namespace Application.Services;
+namespace UserService.Application.Services;
 
 public interface ITokenGenerator
 {

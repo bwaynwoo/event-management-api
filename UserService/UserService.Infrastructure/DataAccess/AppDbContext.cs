@@ -1,5 +1,5 @@
-using Domain.Models;
 using Microsoft.EntityFrameworkCore;
+using UserService.Domain.Models;
 
 namespace UserService.Infrastructure.DataAccess;
 

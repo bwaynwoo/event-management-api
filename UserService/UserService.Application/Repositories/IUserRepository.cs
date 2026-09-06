@@ -1,4 +1,4 @@
-using Domain.Models;
+using UserService.Domain.Models;
 
 namespace UserService.Application.Repositories;
 

@@ -1,4 +1,4 @@
-namespace Application.DTOs;
+namespace UserService.Application.DTOs;
 
 public sealed record UserInfo
 {

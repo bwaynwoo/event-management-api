@@ -1,4 +1,4 @@
-using Application.DTOs;
+using UserService.Application.DTOs;
 
 namespace UserService.Application.Services;
 

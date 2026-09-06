@@ -1,10 +1,9 @@
-using Application.DTOs;
-using Application.Services;
-using Domain.Exceptions;
-using Domain.Models;
 using Microsoft.AspNetCore.Identity;
+using UserService.Application.DTOs;
 using UserService.Application.Repositories;
 using UserService.Domain.Enums;
+using UserService.Domain.Exceptions;
+using UserService.Domain.Models;
 
 namespace UserService.Application.Services;
 

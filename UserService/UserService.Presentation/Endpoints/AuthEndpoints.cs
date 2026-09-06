@@ -1,5 +1,5 @@
-using Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using UserService.Application.DTOs;
 using UserService.Application.Services;
 
 namespace UserService.Presentation.Endpoints;
