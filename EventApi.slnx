@@ -20,10 +20,4 @@
     <Project Path="UserService/UserService.Infrastructure/UserService.Infrastructure.csproj" />
     <Project Path="UserService/UserService.Presentation/UserService.Presentation.csproj" />
   </Folder>
-  <Project Path="Application/Application.csproj" />
-  <Project Path="Domain/Domain.csproj" />
-  <Project Path="Infrastructure/Infrastructure.csproj" />
-  <Project Path="IntegrationTests\IntegrationTests.csproj" />
-  <Project Path="Presentation\Presentation.csproj" />
-  <Project Path="Tests\Tests.csproj" />
 </Solution>
