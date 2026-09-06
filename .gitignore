@@ -57,3 +57,6 @@ nunit-*.xml
 EventManagementApi.sln.DotSettings.user
 Presentation/appsettings.Development.json
 *.user
+EventService/EventService.Presentation/appsettings.Development.json
+BookingService/BookingService.Presentation/appsettings.Development.json
+UserService/UserService.Presentation/appsettings.Development.json
