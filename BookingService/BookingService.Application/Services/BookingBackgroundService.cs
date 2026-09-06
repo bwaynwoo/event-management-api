@@ -10,6 +10,7 @@ namespace BookingService.Application.Services;
 
 internal sealed class BookingBackgroundService(
     IServiceScopeFactory scopeFactory,
+    IEventPublisher publisher,
     ILogger<BookingBackgroundService> logger)
     : BackgroundService
 {
@@ -58,6 +59,15 @@ internal sealed class BookingBackgroundService(
 
             current.Confirm();
             await repository.UpdateAsync(current, stoppingToken);
+            
+            await publisher.PublishBookingConfirmedAsync(new BookingConfirmed
+            {
+                BookingId = current.Id,
+                EventId = current.EventId,
+                UserId = current.UserId,
+                Seats = 1,
+                ConfirmedAt = DateTime.UtcNow
+            }, stoppingToken);
 
             logger.LogInformation("Booking {BookingId} confirmed and published", current.Id);
         }
