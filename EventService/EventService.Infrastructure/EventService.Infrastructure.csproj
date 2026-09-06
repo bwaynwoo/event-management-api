@@ -8,9 +8,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EventService.Application\EventService.Application.csproj"/>
+    <ProjectReference Include="..\..\Contracts\Contracts\Contracts.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Confluent.Kafka" Version="2.15.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="$(EfCoreVersion)">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
