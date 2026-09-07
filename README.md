@@ -8,9 +8,9 @@
 
 | Сервис | База данных           | Порт | Описание |
 |--------|-----------------------|------|----------|
-| **UserService** | users (PostgreSQL)    | 5432 | Регистрация, вход, хеширование паролей, генерация JWT-токенов |
-| **EventService** | events (PostgreSQL)   | 5433 | Управление событиями (CRUD), учёт доступных мест |
-| **BookingService** | bookings (PostgreSQL) | 5434 | Создание и отмена броней, лимиты бронирований |
+| **UserService** | users (PostgreSQL)    | 5270 | Регистрация, вход, хеширование паролей, генерация JWT-токенов |
+| **EventService** | events (PostgreSQL)   | 5257 | Управление событиями (CRUD), учёт доступных мест |
+| **BookingService** | bookings (PostgreSQL) | 5237 | Создание и отмена броней, лимиты бронирований |
 
 Каждый сервис имеет:
 - Собственную базу данных
@@ -262,8 +262,7 @@ dotnet test --filter "GetByIdAsync_ReturnsBooking"
 ```json 
 {
   "login": "admin",
-  "password": "admin123",
-  "role": 1
+  "password": "admin123"
 }
 ```
 - role: 0 — обычный пользователь (User)
@@ -290,8 +289,8 @@ dotnet test --filter "GetByIdAsync_ReturnsBooking"
 {
   "Jwt": {
     "SecretKey": "your-super-secret-key-at-least-32-characters-long!",
-    "Issuer": "Presentation",
-    "Audience": "Event",
+    "Issuer": "EventApi",
+    "Audience": "EventApi",
     "ExpirationMinutes": 60
   }
 }
