@@ -1,5 +1,4 @@
 using EventService.Application.Services;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EventService.Application;
