@@ -5,6 +5,7 @@ using EventService.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 namespace EventService.Infrastructure
 {
@@ -20,6 +21,10 @@ namespace EventService.Infrastructure
                 options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
             services.AddScoped<IEventRepository, EventRepository>();
+
+            var redisConnectionString = configuration.GetSection("Redis")["ConnectionString"] ?? "localhost:6379";
+            services.AddSingleton<IConnectionMultiplexer>(
+                ConnectionMultiplexer.Connect(redisConnectionString));
 
             services.AddHostedService<KafkaTopicInitializer>();
             services.AddHostedService<BookingConfirmedConsumer>();
