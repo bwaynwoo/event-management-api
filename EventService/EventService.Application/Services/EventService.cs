@@ -15,6 +15,8 @@ internal sealed class EventService(
         var @event = Event.Create(request.Title, request.StartAt, request.EndAt, request.TotalSeats,
             request.Description);
         await eventRepository.AddAsync(@event, cancellationToken);
+        await cache.RemoveAsync(CacheKeys.TopEvents, cancellationToken);
+
         return ToInfo(@event);
     }
 
@@ -74,6 +76,9 @@ internal sealed class EventService(
         @event.Update(request.Title, request.StartAt, request.EndAt, request.Description);
         await eventRepository.SaveChangesAsync(cancellationToken);
 
+        await cache.RemoveAsync(CacheKeys.Event(id), cancellationToken);
+        await cache.RemoveAsync(CacheKeys.TopEvents, cancellationToken);
+
         return ToInfo(@event);
     }
 
@@ -82,6 +87,8 @@ internal sealed class EventService(
         var @event = await eventRepository.GetByIdAsync(id, cancellationToken);
 
         await eventRepository.DeleteAsync(@event, cancellationToken);
+        await cache.RemoveAsync(CacheKeys.Event(id), cancellationToken);
+        await cache.RemoveAsync(CacheKeys.TopEvents, cancellationToken);
     }
 
     internal static EventInfo ToInfo(Event @event) => new()
