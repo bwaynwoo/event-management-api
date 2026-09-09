@@ -1,4 +1,6 @@
 using EventService.Application.Repositories;
+using EventService.Application.Services;
+using EventService.Infrastructure.Cache;
 using EventService.Infrastructure.DataAccess;
 using EventService.Infrastructure.Kafka;
 using EventService.Infrastructure.Repositories;
@@ -16,6 +18,7 @@ namespace EventService.Infrastructure
             IConfiguration configuration)
         {
             services.Configure<KafkaOptions>(configuration.GetSection("Kafka"));
+            services.Configure<RedisOptions>(configuration.GetSection("Redis"));
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
@@ -25,6 +28,8 @@ namespace EventService.Infrastructure
             var redisConnectionString = configuration.GetSection("Redis")["ConnectionString"] ?? "localhost:6379";
             services.AddSingleton<IConnectionMultiplexer>(
                 ConnectionMultiplexer.Connect(redisConnectionString));
+            
+            services.AddScoped<ICacheService, RedisCacheService>();
 
             services.AddHostedService<KafkaTopicInitializer>();
             services.AddHostedService<BookingConfirmedConsumer>();

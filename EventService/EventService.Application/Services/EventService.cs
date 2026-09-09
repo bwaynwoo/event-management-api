@@ -1,13 +1,14 @@
 using EventService.Application.DTOs;
 using EventService.Application.Repositories;
 using EventService.Domain.Models;
+using Microsoft.Extensions.Options;
 
 namespace EventService.Application.Services;
 
-internal sealed class EventService(
+public sealed class EventService(
     IEventRepository eventRepository,
     ICacheService cache,
-    EventCacheOptions cacheOptions)
+    IOptions<EventCacheOptions> cacheOptions)
     : IEventService
 {
     public async Task<EventInfo> CreateEventAsync(CreateEvent request, CancellationToken cancellationToken = default)
@@ -31,7 +32,7 @@ internal sealed class EventService(
         var @event = await eventRepository.GetByIdAsync(id, cancellationToken);
         var info = ToInfo(@event);
 
-        await cache.SetAsync(cacheKey, info, cacheOptions.EventTtl, cancellationToken);
+        await cache.SetAsync(cacheKey, info, cacheOptions.Value.EventTtl, cancellationToken);
         return info;
     }
 
@@ -43,7 +44,7 @@ internal sealed class EventService(
 
         var events = await eventRepository.GetTopAsync(10, cancellationToken);
         var result = events.Select(ToInfo).ToArray();
-        await cache.SetAsync(CacheKeys.TopEvents, result, cacheOptions.TopEventsTtl, cancellationToken);
+        await cache.SetAsync(CacheKeys.TopEvents, result, cacheOptions.Value.TopEventsTtl, cancellationToken);
 
         return result;
     }
