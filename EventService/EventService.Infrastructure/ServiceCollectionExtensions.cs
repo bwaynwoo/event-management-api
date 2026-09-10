@@ -9,32 +9,31 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
 
-namespace EventService.Infrastructure
+namespace EventService.Infrastructure;
+
+public static class ServiceCollectionExtensions
 {
-    public static class ServiceCollectionExtensions
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
-        public static IServiceCollection AddInfrastructure(
-            this IServiceCollection services,
-            IConfiguration configuration)
-        {
-            services.Configure<KafkaOptions>(configuration.GetSection("Kafka"));
-            services.Configure<RedisOptions>(configuration.GetSection("Redis"));
+        services.Configure<KafkaOptions>(configuration.GetSection("Kafka"));
+        services.Configure<RedisOptions>(configuration.GetSection("Redis"));
 
-            services.AddDbContext<AppDbContext>(options =>
-                options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddScoped<IEventRepository, EventRepository>();
+        services.AddScoped<IEventRepository, EventRepository>();
 
-            var redisConnectionString = configuration.GetSection("Redis")["ConnectionString"] ?? "localhost:6379";
-            services.AddSingleton<IConnectionMultiplexer>(
-                ConnectionMultiplexer.Connect(redisConnectionString));
+        var redisConnectionString = configuration.GetSection("Redis")["ConnectionString"] ?? "localhost:6379";
+        services.AddSingleton<IConnectionMultiplexer>(
+            ConnectionMultiplexer.Connect($"{redisConnectionString},abortConnect=false"));
             
-            services.AddScoped<ICacheService, RedisCacheService>();
+        services.AddScoped<ICacheService, RedisCacheService>();
 
-            services.AddHostedService<KafkaTopicInitializer>();
-            services.AddHostedService<BookingConfirmedConsumer>();
+        services.AddHostedService<KafkaTopicInitializer>();
+        services.AddHostedService<BookingConfirmedConsumer>();
 
-            return services;
-        }
+        return services;
     }
 }

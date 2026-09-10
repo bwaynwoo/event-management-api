@@ -11,7 +11,7 @@ public static class ServiceCollectionExtensions
     {
         services.Configure<EventCacheOptions>(options => 
         {
-            configuration.GetSection("EventCache").Bind(options);
+            configuration.GetSection("Cache").Bind(options);
         });
 
         services.AddScoped<IEventService, Services.EventService>();
