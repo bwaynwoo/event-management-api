@@ -26,9 +26,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEventRepository, EventRepository>();
 
         var redisConnectionString = configuration.GetSection("Redis")["ConnectionString"] ?? "localhost:6379";
-        services.AddSingleton<IConnectionMultiplexer>(
-            ConnectionMultiplexer.Connect($"{redisConnectionString},abortConnect=false"));
-            
+        services.AddSingleton<IConnectionMultiplexer>(sp =>
+            ConnectionMultiplexer.Connect(redisConnectionString));
+
         services.AddScoped<ICacheService, RedisCacheService>();
 
         services.AddHostedService<KafkaTopicInitializer>();
