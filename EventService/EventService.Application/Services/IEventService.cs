@@ -8,6 +8,7 @@ public interface IEventService
         DateTime? to = null, string? title = null, CancellationToken cancellationToken = default);
 
     Task<EventInfo> GetEventByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<EventInfo>> GetTopEventsAsync(CancellationToken cancellationToken = default);
     Task<EventInfo> CreateEventAsync(CreateEvent createEvent, CancellationToken cancellationToken = default);
     Task<EventInfo> UpdateEventAsync(Guid id, UpdateEvent updateEvent, CancellationToken cancellationToken = default);
     Task DeleteEventAsync(Guid id, CancellationToken cancellationToken = default);

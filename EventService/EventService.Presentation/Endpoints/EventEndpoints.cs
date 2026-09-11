@@ -26,6 +26,15 @@ internal static class EventEndpoints
             .Produces<PaginatedResult<EventInfo>>(StatusCodes.Status200OK)
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 
+        group.MapGet("/top", async (IEventService eventService) =>
+            {
+                var events = await eventService.GetTopEventsAsync();
+                return Results.Ok(events);
+            })
+            .WithName("GetTopEvents")
+            .Produces<IReadOnlyCollection<EventInfo>>(StatusCodes.Status200OK)
+            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+
         group.MapGet("/{id:guid}", async (Guid id, IEventService eventService, CancellationToken cancellationToken) =>
             {
                 var @event = await eventService.GetEventByIdAsync(id, cancellationToken);

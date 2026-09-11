@@ -1,31 +1,52 @@
 using EventService.Application.DTOs;
 using EventService.Application.Repositories;
 using EventService.Domain.Models;
+using Microsoft.Extensions.Options;
 
 namespace EventService.Application.Services;
 
-internal sealed class EventService : IEventService
+public sealed class EventService(
+    IEventRepository eventRepository,
+    ICacheService cache,
+    IOptions<EventCacheOptions> cacheOptions)
+    : IEventService
 {
-    private readonly IEventRepository _eventRepository;
-
-    public EventService(IEventRepository eventRepository)
-    {
-        _eventRepository = eventRepository;
-    }
-
     public async Task<EventInfo> CreateEventAsync(CreateEvent request, CancellationToken cancellationToken = default)
     {
         var @event = Event.Create(request.Title, request.StartAt, request.EndAt, request.TotalSeats,
             request.Description);
-        await _eventRepository.AddAsync(@event, cancellationToken);
+        await eventRepository.AddAsync(@event, cancellationToken);
+        await cache.RemoveAsync(CacheKeys.TopEvents, cancellationToken);
+
         return ToInfo(@event);
     }
 
     public async Task<EventInfo> GetEventByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var @event = await _eventRepository.GetByIdAsync(id, cancellationToken);
+        var cacheKey = CacheKeys.Event(id);
 
-        return ToInfo(@event);
+        var cached = await cache.GetAsync<EventInfo>(cacheKey, cancellationToken);
+        if (cached is not null)
+            return cached;
+
+        var @event = await eventRepository.GetByIdAsync(id, cancellationToken);
+        var info = ToInfo(@event);
+
+        await cache.SetAsync(cacheKey, info, cacheOptions.Value.EventTtl, cancellationToken);
+        return info;
+    }
+
+    public async Task<IReadOnlyCollection<EventInfo>> GetTopEventsAsync(CancellationToken cancellationToken = default)
+    {
+        var cached = await cache.GetAsync<EventInfo[]>(CacheKeys.TopEvents, cancellationToken);
+        if (cached is not null)
+            return cached;
+
+        var events = await eventRepository.GetTopAsync(10, cancellationToken);
+        var result = events.Select(ToInfo).ToArray();
+        await cache.SetAsync(CacheKeys.TopEvents, result, cacheOptions.Value.TopEventsTtl, cancellationToken);
+
+        return result;
     }
 
     public async Task<PaginatedResult<EventInfo>> GetAllEventsAsync(
@@ -36,7 +57,7 @@ internal sealed class EventService : IEventService
         string? title = null,
         CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _eventRepository.GetEventsAsync(
+        var (items, totalCount) = await eventRepository.GetEventsAsync(
             page, pageSize, from, to, title, cancellationToken);
 
         return new PaginatedResult<EventInfo>
@@ -51,19 +72,24 @@ internal sealed class EventService : IEventService
     public async Task<EventInfo> UpdateEventAsync(Guid id, UpdateEvent request,
         CancellationToken cancellationToken = default)
     {
-        var @event = await _eventRepository.GetByIdAsync(id, cancellationToken);
+        var @event = await eventRepository.GetByIdAsync(id, cancellationToken);
 
         @event.Update(request.Title, request.StartAt, request.EndAt, request.Description);
-        await _eventRepository.SaveChangesAsync(cancellationToken);
+        await eventRepository.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveAsync(CacheKeys.Event(id), cancellationToken);
+        await cache.RemoveAsync(CacheKeys.TopEvents, cancellationToken);
 
         return ToInfo(@event);
     }
 
     public async Task DeleteEventAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var @event = await _eventRepository.GetByIdAsync(id, cancellationToken);
+        var @event = await eventRepository.GetByIdAsync(id, cancellationToken);
 
-        await _eventRepository.DeleteAsync(@event, cancellationToken);
+        await eventRepository.DeleteAsync(@event, cancellationToken);
+        await cache.RemoveAsync(CacheKeys.Event(id), cancellationToken);
+        await cache.RemoveAsync(CacheKeys.TopEvents, cancellationToken);
     }
 
     internal static EventInfo ToInfo(Event @event) => new()

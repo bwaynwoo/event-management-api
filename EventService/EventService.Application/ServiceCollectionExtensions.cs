@@ -1,13 +1,19 @@
 using EventService.Application.Services;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EventService.Application;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddApplication(this IServiceCollection services)
+    public static IServiceCollection AddApplication(this IServiceCollection services,
+        IConfiguration configuration)
     {
+        services.Configure<EventCacheOptions>(options => 
+        {
+            configuration.GetSection("Cache").Bind(options);
+        });
+
         services.AddScoped<IEventService, Services.EventService>();
 
         return services;

@@ -13,6 +13,7 @@
     <Project Path="EventService/EventService.Domain/EventService.Domain.csproj" />
     <Project Path="EventService/EventService.Infrastructure/EventService.Infrastructure.csproj" />
     <Project Path="EventService/EventService.Presentation/EventService.Presentation.csproj" />
+    <Project Path="EventService/EventService.Tests/EventService.Tests.csproj" />
   </Folder>
   <Folder Name="/UserService/">
     <Project Path="UserService/UserService.Application/UserService.Application.csproj" />

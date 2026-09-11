@@ -1,7 +1,9 @@
 using System.Text.Json;
 using Confluent.Kafka;
 using Contracts;
+using EventService.Application;
 using EventService.Application.Repositories;
+using EventService.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -87,6 +89,7 @@ public sealed class BookingConfirmedConsumer(
 
         using var scope = scopeFactory.CreateScope();
         var eventRepository = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
 
         var @event = await eventRepository.GetByIdAsync(message.EventId, stoppingToken);
         if (@event is null)
@@ -106,6 +109,8 @@ public sealed class BookingConfirmedConsumer(
         }
 
         await eventRepository.UpdateAsync(@event, stoppingToken);
+        await cacheService.RemoveAsync(CacheKeys.Event(message.EventId), stoppingToken);
+        await cacheService.RemoveAsync(CacheKeys.TopEvents, stoppingToken);
 
         logger.LogInformation(
             "Reserved {Seats} seat(s) for event {EventId} (booking {BookingId}); {Available} left",

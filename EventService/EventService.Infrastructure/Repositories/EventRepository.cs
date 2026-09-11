@@ -6,30 +6,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EventService.Infrastructure.Repositories;
 
-public class EventRepository : IEventRepository
+public class EventRepository(AppDbContext db) : IEventRepository
 {
-    private readonly AppDbContext _db;
-
-    public EventRepository(AppDbContext db)
-    {
-        _db = db;
-    }
-
     public async Task<Event> GetByIdAsync(Guid eventId, CancellationToken cancellationToken)
     {
-        return await _db.Events.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken)
+        return await db.Events.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken)
                ?? throw new NotFoundException("Event not found");
     }
 
     public async Task AddAsync(Event @event, CancellationToken cancellationToken)
     {
-        await _db.Events.AddAsync(@event, cancellationToken);
-        await _db.SaveChangesAsync(cancellationToken);
+        await db.Events.AddAsync(@event, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
-        await _db.SaveChangesAsync(cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<(List<Event> Items, int TotalCount)> GetEventsAsync(
@@ -40,7 +33,7 @@ public class EventRepository : IEventRepository
         string? title,
         CancellationToken cancellationToken)
     {
-        var query = _db.Events.AsQueryable();
+        var query = db.Events.AsQueryable();
 
         if (from.HasValue)
             query = query.Where(e => e.StartAt >= from.Value);
@@ -61,15 +54,24 @@ public class EventRepository : IEventRepository
         return (items, totalCount);
     }
 
+    public async Task<IReadOnlyCollection<Event>> GetTopAsync(int count, CancellationToken cancellationToken = default)
+    {
+        return await db.Events
+            .Where(e => e.TotalSeats > 0)
+            .OrderByDescending(e => (e.TotalSeats - e.AvailableSeats) * 1.0 / e.TotalSeats)
+            .Take(count)
+            .ToArrayAsync(cancellationToken);
+    }
+
     public async Task DeleteAsync(Event @event, CancellationToken cancellationToken)
     {
-        _db.Events.Remove(@event);
-        await _db.SaveChangesAsync(cancellationToken);
+        db.Events.Remove(@event);
+        await db.SaveChangesAsync(cancellationToken);
     }
-    
+
     public async Task UpdateAsync(Event @event, CancellationToken cancellationToken = default)
     {
-        _db.Events.Update(@event);
-        await _db.SaveChangesAsync(cancellationToken);
+        db.Events.Update(@event);
+        await db.SaveChangesAsync(cancellationToken);
     }
 }
